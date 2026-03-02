@@ -40,10 +40,7 @@ export default function DashboardScreen() {
     return filterProperties({ category }).length;
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/');
-  };
+
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -58,8 +55,8 @@ export default function DashboardScreen() {
             <Text style={styles.greeting}>Hello, {user.name}</Text>
             <Text style={styles.role}>{user.role === 'finder' ? 'Property Finder' : 'Property Owner'}</Text>
           </View>
-          <Pressable onPress={handleLogout} style={styles.logoutButton}>
-            <MaterialIcons name="logout" size={24} color={theme.colors.white} />
+          <Pressable onPress={() => router.push('/settings')} style={styles.settingsButton}>
+            <MaterialIcons name="settings" size={24} color={theme.colors.white} />
           </Pressable>
         </View>
       </LinearGradient>
@@ -153,7 +150,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
     opacity: 0.9,
   },
-  logoutButton: {
+  settingsButton: {
     padding: theme.spacing.sm,
   },
   content: {

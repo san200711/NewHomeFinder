@@ -23,6 +23,7 @@ export default function RootLayout() {
               <Stack.Screen name="properties/add" />
               <Stack.Screen name="properties/my-listings" />
               <Stack.Screen name="properties/favorites" />
+              <Stack.Screen name="settings" />
             </Stack>
           </PropertyProvider>
         </AuthProvider>
