@@ -63,7 +63,15 @@ export default function PropertyDetailScreen() {
           }}
         >
           {property.images.map((uri, index) => (
-            <Image key={index} source={{ uri }} style={styles.image} contentFit="cover" transition={200} />
+            <Image
+              key={index}
+              source={{ uri }}
+              style={styles.image}
+              contentFit="cover"
+              transition={200}
+              placeholder={{ blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.' }}
+              cachePolicy="memory-disk"
+            />
           ))}
         </ScrollView>
 

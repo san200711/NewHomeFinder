@@ -37,6 +37,8 @@ export function PropertyCard({ property, isFavorite, onPress, onFavoritePress }:
           style={styles.image}
           contentFit="cover"
           transition={200}
+          placeholder={{ blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.' }}
+          cachePolicy="memory-disk"
         />
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{categoryLabels[property.category]}</Text>
