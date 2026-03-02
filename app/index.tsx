@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -109,8 +109,6 @@ function RoleCard({
     </Pressable>
   );
 }
-
-import { Pressable } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
