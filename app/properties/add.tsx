@@ -32,6 +32,7 @@ export default function AddPropertyScreen() {
   const [amenities, setAmenities] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [coordinates, setCoordinates] = useState({ latitude: 28.6139, longitude: 77.209 });
 
   const categories = [
     { value: 'home-rent', label: 'Home Rent' },
@@ -64,6 +65,12 @@ export default function AddPropertyScreen() {
       return;
     }
 
+    // Add small random offset to coordinates for new properties
+    const randomCoords = {
+      latitude: coordinates.latitude + (Math.random() - 0.5) * 0.05,
+      longitude: coordinates.longitude + (Math.random() - 0.5) * 0.05,
+    };
+
     if (images.length === 0) {
       showAlert('Error', 'Please add at least one image');
       return;
@@ -86,6 +93,7 @@ export default function AddPropertyScreen() {
         price: parseFloat(price),
         location,
         address,
+        coordinates: randomCoords,
         size: parseFloat(size),
         sizeUnit: 'sqft',
         bedrooms: bedrooms ? parseInt(bedrooms) : undefined,

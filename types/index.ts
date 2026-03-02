@@ -11,6 +11,11 @@ export interface User {
 
 export type PropertyCategory = 'home-rent' | 'home-buy' | 'home-sell' | 'land-buy' | 'land-sell';
 
+export interface PropertyCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
 export interface Property {
   id: string;
   ownerId: string;
@@ -22,6 +27,7 @@ export interface Property {
   price: number;
   location: string;
   address: string;
+  coordinates: PropertyCoordinates;
   size: number;
   sizeUnit: 'sqft' | 'sqm' | 'acre' | 'cent';
   images: string[];
@@ -43,6 +49,8 @@ export interface PropertyFilter {
   maxSize?: number;
   bedrooms?: number;
   bathrooms?: number;
+  nearLocation?: PropertyCoordinates;
+  radiusKm?: number;
 }
 
 export interface Inquiry {

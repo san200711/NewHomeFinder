@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
+import { PropertyMapPreview } from '@/components/ui/PropertyMapPreview';
 import { useProperty } from '@/hooks/useProperty';
 import { Property } from '@/types';
 
@@ -144,6 +145,8 @@ export default function PropertyDetailScreen() {
             </View>
           </View>
         )}
+
+        <PropertyMapPreview property={property} />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Owner Information</Text>

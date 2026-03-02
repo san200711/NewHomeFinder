@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { Property, PropertyCategory, PropertyFilter } from '@/types';
+import { Property, PropertyCategory, PropertyFilter, PropertyCoordinates } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface PropertyContextType {
@@ -97,6 +97,20 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     return properties.find((prop) => prop.id === id);
   };
 
+  const calculateDistance = (coord1: PropertyCoordinates, coord2: PropertyCoordinates): number => {
+    const R = 6371; // Radius of Earth in km
+    const dLat = ((coord2.latitude - coord1.latitude) * Math.PI) / 180;
+    const dLon = ((coord2.longitude - coord1.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((coord1.latitude * Math.PI) / 180) *
+        Math.cos((coord2.latitude * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const filterProperties = (filter: PropertyFilter) => {
     return properties.filter((prop) => {
       if (filter.category && prop.category !== filter.category) return false;
@@ -107,6 +121,10 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       if (filter.maxSize !== undefined && prop.size > filter.maxSize) return false;
       if (filter.bedrooms && prop.bedrooms && prop.bedrooms < filter.bedrooms) return false;
       if (filter.bathrooms && prop.bathrooms && prop.bathrooms < filter.bathrooms) return false;
+      if (filter.nearLocation && filter.radiusKm) {
+        const distance = calculateDistance(filter.nearLocation, prop.coordinates);
+        if (distance > filter.radiusKm) return false;
+      }
       return true;
     });
   };
@@ -138,6 +156,21 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 function generateSampleProperties(): Property[] {
   const ownerNames = ['John Smith', 'Sarah Johnson', 'Mike Wilson', 'Emma Davis', 'David Brown', 'Lisa Anderson', 'Robert Taylor', 'Jennifer Lee', 'William Martinez', 'Mary Garcia'];
   const locations = ['Downtown', 'Green Valley', 'Riverside', 'Hillside', 'Lakeside', 'Oakwood', 'Maple Street', 'Pine Hills', 'Cedar Park', 'Elm Avenue'];
+  
+  // Base coordinates for New Delhi area
+  const baseCoordinates = {
+    latitude: 28.6139,
+    longitude: 77.209,
+  };
+
+  const generateRandomCoordinates = (index: number): PropertyCoordinates => {
+    // Generate coordinates within ~20km radius of base location
+    const offset = 0.15; // Approximately 15-20km
+    return {
+      latitude: baseCoordinates.latitude + (Math.random() - 0.5) * offset,
+      longitude: baseCoordinates.longitude + (Math.random() - 0.5) * offset,
+    };
+  };
   
   const properties: Property[] = [];
   let idCounter = 1;
@@ -209,6 +242,7 @@ function generateSampleProperties(): Property[] {
       price: home.price,
       location: locations[Math.floor(Math.random() * locations.length)],
       address: `${100 + index} ${locations[Math.floor(Math.random() * locations.length)]} Street`,
+      coordinates: generateRandomCoordinates(index),
       size: home.size,
       sizeUnit: 'sqft',
       bedrooms: home.beds,
@@ -257,6 +291,7 @@ function generateSampleProperties(): Property[] {
       price: home.price,
       location: locations[Math.floor(Math.random() * locations.length)],
       address: `${200 + index} ${locations[Math.floor(Math.random() * locations.length)]} Avenue`,
+      coordinates: generateRandomCoordinates(index + 50),
       size: home.size,
       sizeUnit: 'sqft',
       bedrooms: home.beds,
@@ -295,6 +330,7 @@ function generateSampleProperties(): Property[] {
       price: land.price,
       location: locations[Math.floor(Math.random() * locations.length)],
       address: `Plot ${300 + index}, ${locations[Math.floor(Math.random() * locations.length)]} District`,
+      coordinates: generateRandomCoordinates(index + 70),
       size: land.size,
       sizeUnit: 'sqft',
       images: [land.img, 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800'],
