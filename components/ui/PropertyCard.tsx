@@ -3,15 +3,18 @@ import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { Property } from '@/types';
+import { StarRating } from './StarRating';
 
 interface PropertyCardProps {
   property: Property;
   isFavorite?: boolean;
   onPress: () => void;
   onFavoritePress?: () => void;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
-export function PropertyCard({ property, isFavorite, onPress, onFavoritePress }: PropertyCardProps) {
+export function PropertyCard({ property, isFavorite, onPress, onFavoritePress, averageRating, reviewCount }: PropertyCardProps) {
   const categoryLabels = {
     'home-rent': 'For Rent',
     'home-buy': 'For Sale',
@@ -64,6 +67,14 @@ export function PropertyCard({ property, isFavorite, onPress, onFavoritePress }:
             {property.location}
           </Text>
         </View>
+        {averageRating !== undefined && averageRating > 0 && (
+          <View style={styles.ratingContainer}>
+            <StarRating rating={averageRating} size={14} />
+            <Text style={styles.ratingText}>
+              {averageRating.toFixed(1)} ({reviewCount || 0} {reviewCount === 1 ? 'review' : 'reviews'})
+            </Text>
+          </View>
+        )}
         <View style={styles.details}>
           {property.bedrooms && (
             <View style={styles.detail}>
@@ -164,5 +175,16 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  ratingText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+    marginLeft: theme.spacing.xs,
   },
 });

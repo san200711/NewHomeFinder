@@ -7,6 +7,7 @@ import { theme } from '@/constants/theme';
 import { PropertyCard } from '@/components/ui/PropertyCard';
 import { PropertyMapView } from '@/components/ui/PropertyMapView';
 import { useProperty } from '@/hooks/useProperty';
+import { useReview } from '@/hooks/useReview';
 import { useAuth } from '@/hooks/useAuth';
 import { PropertyCategory, Property } from '@/types';
 import * as Location from 'expo-location';
@@ -18,6 +19,7 @@ export default function PropertyListScreen() {
   const insets = useSafeAreaInsets();
   const { category } = useLocalSearchParams<{ category: PropertyCategory }>();
   const { filterProperties, toggleFavorite, favorites } = useProperty();
+  const { getPropertyStats } = useReview();
   const { user } = useAuth();
 
   const [properties, setProperties] = useState<Property[]>([]);
@@ -121,6 +123,8 @@ export default function PropertyListScreen() {
               isFavorite={favorites.includes(item.id)}
               onPress={() => handlePropertyPress(item)}
               onFavoritePress={user?.role === 'finder' ? () => handleFavoriteToggle(item.id) : undefined}
+              averageRating={getPropertyStats(item.id).averageRating}
+              reviewCount={getPropertyStats(item.id).totalReviews}
             />
           )}
           ListEmptyComponent={
@@ -148,6 +152,8 @@ export default function PropertyListScreen() {
                 onFavoritePress={
                   user?.role === 'finder' ? () => handleFavoriteToggle(selectedProperty.id) : undefined
                 }
+                averageRating={getPropertyStats(selectedProperty.id).averageRating}
+                reviewCount={getPropertyStats(selectedProperty.id).totalReviews}
               />
             </View>
           )}

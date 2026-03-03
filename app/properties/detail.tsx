@@ -8,7 +8,11 @@ import { theme } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { PropertyMapPreview } from '@/components/ui/PropertyMapPreview';
 import { useProperty } from '@/hooks/useProperty';
+import { useReview } from '@/hooks/useReview';
+import { useAuth } from '@/hooks/useAuth';
 import { Property } from '@/types';
+import { StarRating } from '@/components/ui/StarRating';
+import { ReviewCard } from '@/components/ui/ReviewCard';
 
 const { width } = Dimensions.get('window');
 
@@ -17,9 +21,15 @@ export default function PropertyDetailScreen() {
   const insets = useSafeAreaInsets();
   const { propertyId } = useLocalSearchParams<{ propertyId: string }>();
   const { getPropertyById, toggleFavorite, favorites } = useProperty();
+  const { getPropertyReviews, getPropertyStats, voteHelpful, voteUnhelpful, hasUserReviewed } = useReview();
+  const { user } = useAuth();
 
   const [property, setProperty] = useState<Property | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const reviews = getPropertyReviews(propertyId);
+  const stats = getPropertyStats(propertyId);
+  const userHasReviewed = user ? hasUserReviewed(propertyId, user.id) : false;
 
   useEffect(() => {
     const prop = getPropertyById(propertyId);
@@ -147,6 +157,73 @@ export default function PropertyDetailScreen() {
         )}
 
         <PropertyMapPreview property={property} />
+
+        <View style={styles.section}>
+          <View style={styles.reviewsHeader}>
+            <Text style={styles.sectionTitle}>Reviews</Text>
+            {user && user.role === 'finder' && !userHasReviewed && (
+              <Pressable
+                onPress={() => router.push({ pathname: '/properties/add-review', params: { propertyId } })}
+                style={styles.addReviewButton}
+              >
+                <MaterialIcons name="rate-review" size={20} color={theme.colors.primary} />
+                <Text style={styles.addReviewText}>Write Review</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {stats.totalReviews > 0 ? (
+            <>
+              <View style={styles.statsContainer}>
+                <View style={styles.averageRating}>
+                  <Text style={styles.averageRatingNumber}>{stats.averageRating.toFixed(1)}</Text>
+                  <StarRating rating={stats.averageRating} size={24} />
+                  <Text style={styles.totalReviews}>
+                    Based on {stats.totalReviews} {stats.totalReviews === 1 ? 'review' : 'reviews'}
+                  </Text>
+                </View>
+
+                <View style={styles.distribution}>
+                  {[5, 4, 3, 2, 1].map((star) => (
+                    <View key={star} style={styles.distributionRow}>
+                      <Text style={styles.starLabel}>{star}</Text>
+                      <MaterialIcons name="star" size={14} color={theme.colors.warning} />
+                      <View style={styles.barContainer}>
+                        <View
+                          style={[
+                            styles.bar,
+                            {
+                              width: `${stats.totalReviews > 0 ? (stats.ratingDistribution[star as keyof typeof stats.ratingDistribution] / stats.totalReviews) * 100 : 0}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.countLabel}>
+                        {stats.ratingDistribution[star as keyof typeof stats.ratingDistribution]}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {reviews.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  currentUserId={user?.id}
+                  onHelpfulPress={() => user && voteHelpful(review.id, user.id)}
+                  onUnhelpfulPress={() => user && voteUnhelpful(review.id, user.id)}
+                />
+              ))}
+            </>
+          ) : (
+            <View style={styles.noReviews}>
+              <MaterialIcons name="rate-review" size={48} color={theme.colors.textLight} />
+              <Text style={styles.noReviewsText}>No reviews yet</Text>
+              <Text style={styles.noReviewsSubtext}>Be the first to review this property</Text>
+            </View>
+          )}
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Owner Information</Text>
@@ -317,6 +394,91 @@ const styles = StyleSheet.create({
   },
   ownerMobile: {
     fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  addReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  addReviewText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium,
+  },
+  statsContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  averageRating: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  averageRatingNumber: {
+    fontSize: 48,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.sm,
+  },
+  totalReviews: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.sm,
+  },
+  distribution: {
+    gap: theme.spacing.sm,
+  },
+  distributionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  starLabel: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text,
+    width: 12,
+  },
+  barContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.borderRadius.sm,
+    overflow: 'hidden',
+  },
+  bar: {
+    height: '100%',
+    backgroundColor: theme.colors.warning,
+  },
+  countLabel: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+    width: 20,
+    textAlign: 'right',
+  },
+  noReviews: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xxl,
+  },
+  noReviewsText: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.text,
+    marginTop: theme.spacing.md,
+  },
+  noReviewsSubtext: {
+    fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
   },
