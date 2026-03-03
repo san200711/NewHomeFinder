@@ -9,6 +9,11 @@ interface PropertyMapPreviewProps {
 }
 
 export function PropertyMapPreview({ property }: PropertyMapPreviewProps) {
+  // Check if coordinates are available
+  if (!property.coordinates) {
+    return null; // Don't render map if no coordinates
+  }
+
   const openDirections = () => {
     const { latitude, longitude } = property.coordinates;
     const scheme = Platform.select({

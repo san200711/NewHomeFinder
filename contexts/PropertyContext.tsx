@@ -39,7 +39,25 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (propertiesData) {
-        setProperties(JSON.parse(propertiesData));
+        const loadedProperties = JSON.parse(propertiesData);
+        // Migrate old properties without coordinates
+        const migratedProperties = loadedProperties.map((prop: Property, index: number) => {
+          if (!prop.coordinates) {
+            // Add default coordinates with random offset
+            const offset = 0.15;
+            return {
+              ...prop,
+              coordinates: {
+                latitude: 28.6139 + (Math.random() - 0.5) * offset,
+                longitude: 77.209 + (Math.random() - 0.5) * offset,
+              },
+            };
+          }
+          return prop;
+        });
+        setProperties(migratedProperties);
+        // Save migrated data
+        await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(migratedProperties));
       } else {
         // Initialize with sample data
         const sampleProperties = generateSampleProperties();
@@ -111,6 +129,19 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     return R * c;
   };
 
+  const ensureCoordinates = (property: Property): Property => {
+    if (!property.coordinates) {
+      return {
+        ...property,
+        coordinates: {
+          latitude: 28.6139,
+          longitude: 77.209,
+        },
+      };
+    }
+    return property;
+  };
+
   const filterProperties = (filter: PropertyFilter) => {
     return properties.filter((prop) => {
       if (filter.category && prop.category !== filter.category) return false;
@@ -121,7 +152,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       if (filter.maxSize !== undefined && prop.size > filter.maxSize) return false;
       if (filter.bedrooms && prop.bedrooms && prop.bedrooms < filter.bedrooms) return false;
       if (filter.bathrooms && prop.bathrooms && prop.bathrooms < filter.bathrooms) return false;
-      if (filter.nearLocation && filter.radiusKm) {
+      if (filter.nearLocation && filter.radiusKm && prop.coordinates) {
         const distance = calculateDistance(filter.nearLocation, prop.coordinates);
         if (distance > filter.radiusKm) return false;
       }

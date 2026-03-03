@@ -8,6 +8,11 @@ interface PropertyMapPreviewProps {
 }
 
 export function PropertyMapPreview({ property }: PropertyMapPreviewProps) {
+  // Check if coordinates are available
+  if (!property.coordinates) {
+    return null; // Don't render map if no coordinates
+  }
+
   const openGoogleMaps = () => {
     const { latitude, longitude } = property.coordinates;
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;

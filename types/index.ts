@@ -27,7 +27,7 @@ export interface Property {
   price: number;
   location: string;
   address: string;
-  coordinates: PropertyCoordinates;
+  coordinates?: PropertyCoordinates; // Optional for backward compatibility
   size: number;
   sizeUnit: 'sqft' | 'sqm' | 'acre' | 'cent';
   images: string[];
