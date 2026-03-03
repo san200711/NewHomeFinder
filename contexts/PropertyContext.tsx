@@ -1,3 +1,4 @@
+
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { Property, PropertyCategory, PropertyFilter, PropertyCoordinates } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -208,9 +209,9 @@ function generateSampleProperties(): Property[] {
 
   // 50 Homes for Rent
   const rentalHomes = [
-    { title: 'Modern 3BHK Apartment', desc: 'Spacious apartment with modern amenities, hardwood floors, and central heating. Located in prime residential area with easy access to public transport.', beds: 3, baths: 2, size: 1500, price: 25000, amenities: ['Parking', 'Gym', 'Swimming Pool', '24/7 Security'], img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800' },
-    { title: 'Luxury 2BHK Penthouse', desc: 'Premium penthouse with stunning city views, designer interiors, and private terrace. Perfect for professionals seeking upscale living.', beds: 2, baths: 2, size: 1800, price: 45000, amenities: ['Terrace', 'Lift', 'Power Backup', 'Clubhouse'], img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800' },
-    { title: 'Cozy 1BHK Studio', desc: 'Compact yet comfortable studio apartment ideal for singles or couples. Fully furnished with modern appliances and high-speed internet.', beds: 1, baths: 1, size: 650, price: 15000, amenities: ['Furnished', 'WiFi', 'Parking'], img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800' },
+    { title: 'Modern 3BHK Apartment', desc: 'Spacious apartment with modern amenities, hardwood floors, and central heating. Located in prime residential area with easy access to public transport.', beds: 3, baths: 2, size: 1500, price: 25000, amenities: ['Parking', 'Gym', 'Swimming Pool', '24/7 Security'], img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop' },
+    { title: 'Luxury 2BHK Penthouse', desc: 'Premium penthouse with stunning city views, designer interiors, and private terrace. Perfect for professionals seeking upscale living.', beds: 2, baths: 2, size: 1800, price: 45000, amenities: ['Terrace', 'Lift', 'Power Backup', 'Clubhouse'], img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format&fit=crop' },
+    { title: 'Cozy 1BHK Studio', desc: 'Compact yet comfortable studio apartment ideal for singles or couples. Fully furnished with modern appliances and high-speed internet.', beds: 1, baths: 1, size: 650, price: 15000, amenities: ['Furnished', 'WiFi', 'Parking'], img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop' },
     { title: 'Spacious 4BHK Family Home', desc: 'Large family home with separate dining area, modular kitchen, and ample storage. Surrounded by parks and schools.', beds: 4, baths: 3, size: 2200, price: 38000, amenities: ['Garden', 'Parking', 'Park View', 'Gated Community'], img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800' },
     { title: 'Contemporary 2BHK Flat', desc: 'Well-ventilated apartment with contemporary design, modular kitchen, and premium fittings. Located in a vibrant neighborhood.', beds: 2, baths: 2, size: 1100, price: 22000, amenities: ['Lift', 'Water Supply', 'Security', 'Visitor Parking'], img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800' },
     { title: 'Elegant 3BHK Duplex', desc: 'Duplex apartment with high ceilings, large windows, and elegant interiors. Features separate living and dining areas.', beds: 3, baths: 2, size: 1900, price: 35000, amenities: ['Duplex', 'Balcony', 'Gym', 'Play Area'], img: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800' },
@@ -278,7 +279,7 @@ function generateSampleProperties(): Property[] {
       sizeUnit: 'sqft',
       bedrooms: home.beds,
       bathrooms: home.baths,
-      images: [home.img, 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?w=800', 'https://images.unsplash.com/photo-1600566752229-250ed79470e6?w=800'],
+      images: [home.img, 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&auto=format&fit=crop', 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&auto=format&fit=crop'],
       amenities: home.amenities,
       status: 'active',
       createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -327,7 +328,7 @@ function generateSampleProperties(): Property[] {
       sizeUnit: 'sqft',
       bedrooms: home.beds,
       bathrooms: home.baths,
-      images: [home.img, 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?w=800', 'https://images.unsplash.com/photo-1600566752229-250ed79470e6?w=800', 'https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=800'],
+      images: [home.img, 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&auto=format&fit=crop', 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&auto=format&fit=crop', 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&auto=format&fit=crop'],
       amenities: home.amenities,
       status: 'active',
       createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -364,7 +365,7 @@ function generateSampleProperties(): Property[] {
       coordinates: generateRandomCoordinates(index + 70),
       size: land.size,
       sizeUnit: 'sqft',
-      images: [land.img, 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800'],
+      images: [land.img, 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop'],
       amenities: land.amenities,
       status: 'active',
       createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
