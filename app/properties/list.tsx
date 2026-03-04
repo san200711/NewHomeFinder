@@ -6,10 +6,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { PropertyCard } from '@/components/ui/PropertyCard';
 import { PropertyMapView } from '@/components/ui/PropertyMapView';
+import { FilterModal } from '@/components/ui/FilterModal';
 import { useProperty } from '@/hooks/useProperty';
 import { useReview } from '@/hooks/useReview';
 import { useAuth } from '@/hooks/useAuth';
-import { PropertyCategory, Property } from '@/types';
+import { PropertyCategory, Property, PropertyFilter } from '@/types';
 import * as Location from 'expo-location';
 
 const { height } = Dimensions.get('window');
@@ -27,6 +28,8 @@ export default function PropertyListScreen() {
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>();
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [nearbyRadius, setNearbyRadius] = useState<number>(10);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<PropertyFilter>({ category });
 
   useEffect(() => {
     loadProperties();
@@ -45,7 +48,13 @@ export default function PropertyListScreen() {
   };
 
   const loadProperties = () => {
-    const filtered = filterProperties({ category });
+    const filtered = filterProperties(activeFilters);
+    setProperties(filtered);
+  };
+
+  const handleApplyFilters = (filters: PropertyFilter) => {
+    setActiveFilters(filters);
+    const filtered = filterProperties(filters);
     setProperties(filtered);
   };
 
@@ -98,6 +107,12 @@ export default function PropertyListScreen() {
               <MaterialIcons name="near-me" size={22} color={theme.colors.primary} />
             </Pressable>
           )}
+          <Pressable
+            onPress={() => setFilterModalVisible(true)}
+            style={({ pressed }) => [styles.iconButton, { opacity: pressed ? 0.7 : 1 }]}
+          >
+            <MaterialIcons name="filter-list" size={22} color={theme.colors.primary} />
+          </Pressable>
           <Pressable
             onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
             style={({ pressed }) => [styles.iconButton, { opacity: pressed ? 0.7 : 1 }]}
@@ -159,6 +174,14 @@ export default function PropertyListScreen() {
           )}
         </View>
       )}
+
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApply={handleApplyFilters}
+        currentCategory={category}
+        initialFilters={activeFilters}
+      />
     </View>
   );
 }
