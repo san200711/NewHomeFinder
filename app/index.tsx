@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { StatusBar } from 'expo-status-bar';
 import { theme } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { UserRole } from '@/types';
@@ -25,18 +26,20 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80' }}
-        style={[styles.backgroundImage, { paddingTop: insets.top }]}
+        style={styles.backgroundImage}
         resizeMode="cover"
       >
         <LinearGradient
-          colors={['rgba(37, 99, 235, 0.85)', 'rgba(59, 130, 246, 0.75)']}
+          colors={['rgba(37, 99, 235, 0.95)', 'rgba(59, 130, 246, 0.9)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={{ paddingTop: insets.top }} />
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
             <View style={styles.header}>
               <View style={styles.iconContainer}>
                 <MaterialIcons name="home-work" size={80} color={theme.colors.white} />
