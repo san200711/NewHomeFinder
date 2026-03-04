@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ImageBackground } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
@@ -79,122 +80,135 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Pressable
-        onPress={() => {
-          if (step === 'otp') {
-            setStep('form');
-          } else {
-            router.back();
-          }
-        }}
-        style={styles.backButton}
+    <ImageBackground
+      source={{ uri: 'https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=1200&auto=format&fit=crop&q=80' }}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <LinearGradient
+        colors={['rgba(37, 99, 235, 0.9)', 'rgba(59, 130, 246, 0.85)']}
+        style={[styles.gradient, { paddingTop: insets.top }]}
       >
-        <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
-      </Pressable>
+        <Pressable
+          onPress={() => {
+            if (step === 'otp') {
+              setStep('form');
+            } else {
+              router.back();
+            }
+          }}
+          style={styles.backButton}
+        >
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.white} />
+        </Pressable>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <MaterialIcons name={role === 'finder' ? 'search' : 'business'} size={60} color={theme.colors.primary} />
-          <Text style={styles.title}>
-            {role === 'finder' ? 'Property Finder' : 'Property Owner'} Registration
-          </Text>
-          <Text style={styles.subtitle}>
-            {step === 'form' ? 'Create your account to get started' : 'Enter OTP sent to your mobile'}
-          </Text>
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <View style={styles.iconContainer}>
+              <MaterialIcons name={role === 'finder' ? 'search' : 'business'} size={60} color={theme.colors.white} />
+            </View>
+            <Text style={styles.title}>
+              {role === 'finder' ? 'Property Finder' : 'Property Owner'} Registration
+            </Text>
+            <Text style={styles.subtitle}>
+              {step === 'form' ? 'Create your account to get started' : 'Enter OTP sent to your mobile'}
+            </Text>
+          </View>
 
-        {step === 'form' ? (
-          <View style={styles.form}>
-            <Input
-              label="Full Name"
+          {step === 'form' ? (
+            <View style={styles.form}>
+              <Input
+                label="Full Name"
               placeholder="Enter your full name"
               value={name}
               onChangeText={setName}
               leftIcon="person"
-            />
+              />
 
-            <Input
-              label="Mobile Number"
+              <Input
+                label="Mobile Number"
               placeholder="Enter your mobile number"
               value={mobile}
               onChangeText={setMobile}
               keyboardType="phone-pad"
               leftIcon="phone"
               autoCapitalize="none"
-            />
+              />
 
-            <Input
-              label="Password"
+              <Input
+                label="Password"
               placeholder="Create a password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               leftIcon="lock"
               autoCapitalize="none"
-            />
+              />
 
-            <Input
-              label="Confirm Password"
+              <Input
+                label="Confirm Password"
               placeholder="Re-enter your password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
               leftIcon="lock"
               autoCapitalize="none"
-            />
+              />
 
-            <Button
-              title="Send OTP"
-              onPress={handleSendOTP}
-              loading={loading}
-              variant="gradient"
-              size="large"
-            />
+              <Button
+                title="Send OTP"
+                onPress={handleSendOTP}
+                loading={loading}
+                variant="gradient"
+                size="large"
+              />
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
-              <Pressable onPress={() => router.push({ pathname: '/auth/login', params: { role } })}>
-                <Text style={styles.link}>Login</Text>
-              </Pressable>
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Already have an account? </Text>
+                <Pressable onPress={() => router.push({ pathname: '/auth/login', params: { role } })}>
+                  <Text style={styles.link}>Login</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
-        ) : (
-          <View style={styles.form}>
-            <Input
-              label="Enter OTP"
+          ) : (
+            <View style={styles.form}>
+              <Input
+                label="Enter OTP"
               placeholder="Enter 6-digit OTP"
               value={otp}
               onChangeText={setOtp}
               keyboardType="number-pad"
               leftIcon="security"
               maxLength={6}
-            />
+              />
 
-            <Text style={styles.hint}>OTP sent to {mobile}</Text>
+              <Text style={styles.hint}>OTP sent to {mobile}</Text>
 
-            <Button
-              title="Verify and Register"
-              onPress={handleVerifyAndRegister}
-              loading={loading}
-              variant="gradient"
-              size="large"
-            />
+              <Button
+                title="Verify and Register"
+                onPress={handleVerifyAndRegister}
+                loading={loading}
+                variant="gradient"
+                size="large"
+              />
 
-            <Pressable onPress={handleSendOTP}>
-              <Text style={styles.resend}>Resend OTP</Text>
-            </Pressable>
-          </View>
-        )}
-      </ScrollView>
-    </View>
+              <Pressable onPress={handleSendOTP}>
+                <Text style={styles.resend}>Resend OTP</Text>
+              </Pressable>
+            </View>
+          )}
+        </ScrollView>
+      </LinearGradient>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+  },
+  gradient: {
+    flex: 1,
   },
   backButton: {
     padding: theme.spacing.md,
@@ -202,30 +216,49 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: theme.spacing.lg,
   },
+  iconContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.full,
+    marginBottom: theme.spacing.md,
+  },
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
   },
   title: {
     fontSize: theme.fontSize.xxl,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.text,
+    color: theme.colors.white,
     marginTop: theme.spacing.md,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
+    color: 'rgba(255, 255, 255, 0.95)',
     marginTop: theme.spacing.sm,
     textAlign: 'center',
   },
   form: {
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 24,
+    padding: theme.spacing.lg,
     gap: theme.spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
   hint: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
     textAlign: 'center',
+    marginTop: -theme.spacing.xs,
   },
   resend: {
     fontSize: theme.fontSize.sm,

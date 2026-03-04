@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { theme } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { UserRole } from '@/types';
@@ -23,58 +24,66 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient
-        colors={[theme.colors.gradient1, theme.colors.gradient2]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
+    <View style={styles.container}>
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80' }}
+        style={[styles.backgroundImage, { paddingTop: insets.top }]}
+        resizeMode="cover"
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <MaterialIcons name="home-work" size={80} color={theme.colors.white} />
-            <Text style={styles.appName}>New Home Finder</Text>
-            <Text style={styles.tagline}>Find Your Dream Property</Text>
-          </View>
-
-          <View style={styles.content}>
-            <Text style={styles.sectionTitle}>Choose Your Role</Text>
-            <Text style={styles.sectionDescription}>Select how you want to use the app</Text>
-
-            <View style={styles.roleCards}>
-              <RoleCard
-                role="finder"
-                title="Property Finder"
-                description="Search and find your dream home or land"
-                icon="search"
-                selected={selectedRole === 'finder'}
-                onSelect={() => setSelectedRole('finder')}
-              />
-              <RoleCard
-                role="owner"
-                title="Property Owner"
-                description="List and manage your properties"
-                icon="business"
-                selected={selectedRole === 'owner'}
-                onSelect={() => setSelectedRole('owner')}
-              />
+        <LinearGradient
+          colors={['rgba(37, 99, 235, 0.85)', 'rgba(59, 130, 246, 0.75)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <MaterialIcons name="home-work" size={80} color={theme.colors.white} />
+              </View>
+              <Text style={styles.appName}>New Home Finder</Text>
+              <Text style={styles.tagline}>Find Your Dream Property</Text>
             </View>
 
-            <View style={styles.actions}>
-              <Button
-                title="Continue"
-                onPress={handleContinue}
-                disabled={!selectedRole}
-                size="large"
-                style={styles.button}
-              />
-              <Text style={styles.footerText}>
-                By continuing, you agree to our Terms & Privacy Policy
-              </Text>
+            <View style={styles.content}>
+              <Text style={styles.sectionTitle}>Choose Your Role</Text>
+              <Text style={styles.sectionDescription}>Select how you want to use the app</Text>
+
+              <View style={styles.roleCards}>
+                <RoleCard
+                  role="finder"
+                  title="Property Finder"
+                  description="Search and find your dream home or land"
+                  icon="search"
+                  selected={selectedRole === 'finder'}
+                  onSelect={() => setSelectedRole('finder')}
+                />
+                <RoleCard
+                  role="owner"
+                  title="Property Owner"
+                  description="List and manage your properties"
+                  icon="business"
+                  selected={selectedRole === 'owner'}
+                  onSelect={() => setSelectedRole('owner')}
+                />
+              </View>
+
+              <View style={styles.actions}>
+                <Button
+                  title="Continue"
+                  onPress={handleContinue}
+                  disabled={!selectedRole}
+                  size="large"
+                  style={styles.button}
+                />
+                <Text style={styles.footerText}>
+                  By continuing, you agree to our Terms & Privacy Policy
+                </Text>
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </LinearGradient>
+          </ScrollView>
+        </LinearGradient>
+      </ImageBackground>
     </View>
   );
 }
@@ -113,9 +122,19 @@ function RoleCard({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  backgroundImage: {
+    flex: 1,
   },
   gradient: {
     flex: 1,
+  },
+  iconContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.full,
+    marginBottom: theme.spacing.md,
   },
   scrollContent: {
     flexGrow: 1,
@@ -140,10 +159,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: theme.colors.white,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     padding: theme.spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   sectionTitle: {
     fontSize: theme.fontSize.xxl,
@@ -161,16 +185,24 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   roleCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.white,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     borderWidth: 2,
     borderColor: theme.colors.border,
     position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   roleCardSelected: {
     borderColor: theme.colors.primary,
     backgroundColor: '#EFF6FF',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 5,
   },
   roleIconContainer: {
     width: 80,
