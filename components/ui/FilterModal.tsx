@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
-import { Input } from './Input';
-import { Button } from './Button';
 import { PropertyFilter, PropertyCategory } from '@/types';
 
 interface FilterModalProps {
@@ -97,17 +95,22 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose} activeOpacity={1}>
-        <View style={styles.modalOverlay}>
-          <Pressable onPress={(e) => e.stopPropagation()} style={styles.modalContent}>
+      <View style={styles.backdrop}>
+        <Pressable style={styles.backdropPressable} onPress={onClose} />
+        <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Filters</Text>
-            <Pressable onPress={onClose} style={styles.closeButton}>
+            <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
               <MaterialIcons name="close" size={28} color={theme.colors.text} />
             </Pressable>
           </View>
 
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.scrollView} 
+            contentContainerStyle={styles.scrollContent} 
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Listing Type</Text>
               <View style={styles.chipRow}>
@@ -146,22 +149,27 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Price Range</Text>
               <View style={styles.rangeRow}>
-                <View style={styles.rangeInput}>
-                  <Input
+                <View style={styles.rangeInputWrapper}>
+                  <TextInput
                     placeholder="Min"
+                    placeholderTextColor={theme.colors.textLight}
                     value={minPrice}
                     onChangeText={setMinPrice}
                     keyboardType="numeric"
-                    style={styles.input}
+                    style={styles.rangeInput}
                   />
                 </View>
-                <View style={styles.rangeInput}>
-                  <Input
+                <View style={styles.rangeSeparator}>
+                  <View style={styles.rangeLine} />
+                </View>
+                <View style={styles.rangeInputWrapper}>
+                  <TextInput
                     placeholder="Max"
+                    placeholderTextColor={theme.colors.textLight}
                     value={maxPrice}
                     onChangeText={setMaxPrice}
                     keyboardType="numeric"
-                    style={styles.input}
+                    style={styles.rangeInput}
                   />
                 </View>
               </View>
@@ -170,22 +178,27 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Area (sqft)</Text>
               <View style={styles.rangeRow}>
-                <View style={styles.rangeInput}>
-                  <Input
+                <View style={styles.rangeInputWrapper}>
+                  <TextInput
                     placeholder="Min"
+                    placeholderTextColor={theme.colors.textLight}
                     value={minSize}
                     onChangeText={setMinSize}
                     keyboardType="numeric"
-                    style={styles.input}
+                    style={styles.rangeInput}
                   />
                 </View>
-                <View style={styles.rangeInput}>
-                  <Input
+                <View style={styles.rangeSeparator}>
+                  <View style={styles.rangeLine} />
+                </View>
+                <View style={styles.rangeInputWrapper}>
+                  <TextInput
                     placeholder="Max"
+                    placeholderTextColor={theme.colors.textLight}
                     value={maxSize}
                     onChangeText={setMaxSize}
                     keyboardType="numeric"
-                    style={styles.input}
+                    style={styles.rangeInput}
                   />
                 </View>
               </View>
@@ -231,24 +244,37 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Location</Text>
-              <Input
-                placeholder="Enter location"
-                value={location}
-                onChangeText={setLocation}
-                leftIcon="place"
-              />
+              <View style={styles.locationInputWrapper}>
+                <MaterialIcons name="place" size={20} color={theme.colors.textLight} style={styles.locationIcon} />
+                <TextInput
+                  placeholder="Enter location"
+                  placeholderTextColor={theme.colors.textLight}
+                  value={location}
+                  onChangeText={setLocation}
+                  style={styles.locationInput}
+                />
+              </View>
             </View>
           </ScrollView>
 
-          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, theme.spacing.lg) }]}>
-            <Pressable style={styles.resetButton} onPress={handleReset}>
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
+            <Pressable 
+              style={styles.resetButton} 
+              onPress={handleReset}
+              android_ripple={{ color: theme.colors.primary + '20' }}
+            >
               <Text style={styles.resetText}>Reset</Text>
             </Pressable>
-            <Button title="Apply Filters" onPress={handleApply} variant="gradient" style={styles.applyButton} />
+            <Pressable 
+              style={styles.applyButton} 
+              onPress={handleApply}
+              android_ripple={{ color: 'rgba(255,255,255,0.3)' }}
+            >
+              <Text style={styles.applyText}>Apply Filters</Text>
+            </Pressable>
           </View>
-          </Pressable>
         </View>
-      </Pressable>
+      </View>
     </Modal>
   );
 }
@@ -256,54 +282,66 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
-  modalOverlay: {
-    justifyContent: 'flex-end',
+  backdropPressable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   modalContent: {
     backgroundColor: theme.colors.background,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    maxHeight: '85%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '90%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: theme.fontWeight.bold,
+    fontSize: 28,
+    fontWeight: '700',
     color: theme.colors.text,
+    letterSpacing: -0.5,
   },
   closeButton: {
-    padding: theme.spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xl,
   },
   section: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.xxl,
   },
   sectionTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.semibold,
+    fontSize: 18,
+    fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    letterSpacing: -0.3,
   },
   chipRow: {
     flexDirection: 'row',
@@ -312,10 +350,10 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: theme.colors.surface,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: theme.colors.border,
   },
   chipActive: {
@@ -323,38 +361,77 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   chipText: {
-    fontSize: theme.fontSize.md,
+    fontSize: 15,
     color: theme.colors.text,
-    fontWeight: theme.fontWeight.medium,
+    fontWeight: '500',
   },
   chipTextActive: {
     color: theme.colors.white,
+    fontWeight: '600',
   },
   numberChip: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 16,
     backgroundColor: theme.colors.surface,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rangeRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
   },
-  rangeInput: {
+  rangeInputWrapper: {
     flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.md,
   },
-  input: {
+  rangeInput: {
+    fontSize: 16,
+    color: theme.colors.text,
+    paddingVertical: 14,
     textAlign: 'center',
+    fontWeight: '500',
+  },
+  rangeSeparator: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rangeLine: {
+    width: 12,
+    height: 2,
+    backgroundColor: theme.colors.border,
+  },
+  locationInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.md,
+  },
+  locationIcon: {
+    marginRight: theme.spacing.sm,
+  },
+  locationInput: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.colors.text,
+    paddingVertical: 14,
+    fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
     gap: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
@@ -362,19 +439,32 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
+    paddingVertical: 16,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.white,
   },
   resetText: {
-    fontSize: theme.fontSize.md,
+    fontSize: 16,
     color: theme.colors.primary,
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
   applyButton: {
     flex: 1,
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+  },
+  applyText: {
+    fontSize: 16,
+    color: theme.colors.white,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
 });
