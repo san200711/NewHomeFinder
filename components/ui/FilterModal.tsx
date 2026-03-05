@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { Input } from './Input';
@@ -15,6 +16,7 @@ interface FilterModalProps {
 }
 
 export function FilterModal({ visible, onClose, onApply, currentCategory, initialFilters }: FilterModalProps) {
+  const insets = useSafeAreaInsets();
   const [listingType, setListingType] = useState<'rent' | 'buy'>('rent');
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState('');
@@ -88,10 +90,16 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
-        <View style={styles.modalContent}>
+    <Modal 
+      visible={visible} 
+      animationType="slide" 
+      transparent 
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <Pressable style={styles.backdrop} onPress={onClose} activeOpacity={1}>
+        <View style={styles.modalOverlay}>
+          <Pressable onPress={(e) => e.stopPropagation()} style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Filters</Text>
             <Pressable onPress={onClose} style={styles.closeButton}>
@@ -232,30 +240,27 @@ export function FilterModal({ visible, onClose, onApply, currentCategory, initia
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, theme.spacing.lg) }]}>
             <Pressable style={styles.resetButton} onPress={handleReset}>
               <Text style={styles.resetText}>Reset</Text>
             </Pressable>
             <Button title="Apply Filters" onPress={handleApply} variant="gradient" style={styles.applyButton} />
           </View>
+          </Pressable>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  backdrop: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  modalOverlay: {
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: theme.colors.background,
