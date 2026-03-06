@@ -45,10 +45,10 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await sendOTP(mobile);
-      showAlert('OTP Sent', 'Please check your mobile for OTP (Use: 123456)');
+      showAlert('OTP Sent', 'Please check your mobile for the verification code');
       setStep('otp');
     } catch (error) {
-      showAlert('Error', 'Failed to send OTP');
+      showAlert('Error', error instanceof Error ? error.message : 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -192,8 +192,8 @@ export default function RegisterScreen() {
                 size="large"
               />
 
-              <Pressable onPress={handleSendOTP}>
-                <Text style={styles.resend}>Resend OTP</Text>
+              <Pressable onPress={handleSendOTP} disabled={loading}>
+                <Text style={[styles.resend, loading && { opacity: 0.5 }]}>Resend OTP</Text>
               </Pressable>
             </View>
           )}

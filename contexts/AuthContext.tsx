@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SMSService from '@/services/sms';
 
 interface AuthContextType {
   user: User | null;
@@ -43,24 +44,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const sendOTP = async (mobile: string) => {
-    const otp = '123456'; // Mock OTP
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.OTP_STORAGE,
-      JSON.stringify({ mobile, otp, expiresAt: Date.now() + 300000 })
-    );
-    console.log(`OTP sent to ${mobile}: ${otp}`);
+    try {
+      const result = await SMSService.sendOTP(mobile);
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      console.log('✅', result.message);
+    } catch (error) {
+      console.error('Failed to send OTP:', error);
+      throw error;
+    }
   };
 
   const verifyOTP = async (mobile: string, otp: string): Promise<boolean> => {
-    const otpData = await AsyncStorage.getItem(STORAGE_KEYS.OTP_STORAGE);
-    if (!otpData) return false;
-
-    const { mobile: storedMobile, otp: storedOTP, expiresAt } = JSON.parse(otpData);
-    
-    if (storedMobile === mobile && storedOTP === otp && Date.now() < expiresAt) {
-      return true;
+    try {
+      const result = await SMSService.verifyOTP(mobile, otp);
+      if (result.success) {
+        console.log('✅', result.message);
+        return true;
+      } else {
+        console.warn('⚠️', result.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to verify OTP:', error);
+      return false;
     }
-    return false;
   };
 
   const register = async (mobile: string, password: string, name: string, role: UserRole) => {
