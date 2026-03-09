@@ -2,14 +2,11 @@
  * Email Service for OTP Verification
  * Using Resend Email API
  * 
- * Setup Instructions:
- * 1. Sign up at https://resend.com
- * 2. Get your API key from the dashboard
- * 3. Verify your domain (or use onboarding@resend.dev for testing)
- * 4. Add credentials to your .env file:
- *    RESEND_API_KEY=re_your_api_key_here
- *    EMAIL_FROM=onboarding@resend.dev
+ * Configuration:
+ * Edit config/email.config.ts to set up your email credentials
  */
+
+import { EmailConfig } from '@/config/email.config';
 
 interface OTPStorage {
   otp: string;
@@ -20,10 +17,10 @@ interface OTPStorage {
 // In-memory storage for OTPs (for production, use Redis or database)
 const otpStorage = new Map<string, OTPStorage>();
 
-// OTP Configuration
-const OTP_LENGTH = 6;
-const OTP_EXPIRY_MINUTES = 10;
-const MAX_ATTEMPTS = 3;
+// OTP Configuration from config file
+const OTP_LENGTH = EmailConfig.OTP_LENGTH;
+const OTP_EXPIRY_MINUTES = EmailConfig.OTP_EXPIRY_MINUTES;
+const MAX_ATTEMPTS = EmailConfig.MAX_ATTEMPTS;
 
 /**
  * Generate a random 6-digit OTP
@@ -54,14 +51,12 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
       attempts: 0,
     });
 
-    // Resend API credentials (from environment variables)
-    const apiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-
-    if (!apiKey) {
-      console.warn('⚠️ Resend API key not configured. Using mock OTP: 123456');
+    // Check if mock mode is enabled
+    if (EmailConfig.USE_MOCK_EMAIL) {
+      console.warn('📧 Mock Email Mode: Using OTP: 123456');
+      console.warn('💡 To enable real emails, edit config/email.config.ts');
       
-      // Fallback to mock OTP for development
+      // Mock OTP for development
       otpStorage.set(email.toLowerCase(), {
         otp: '123456',
         expiresAt,
@@ -70,7 +65,29 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
 
       return {
         success: true,
-        message: 'OTP sent successfully (Mock Mode - Use: 123456)',
+        message: `Verification code sent to ${email} (Mock Mode - Use: 123456)`,
+      };
+    }
+
+    // Resend API credentials from config file
+    const apiKey = EmailConfig.RESEND_API_KEY;
+    const fromEmail = EmailConfig.EMAIL_FROM;
+
+    if (!apiKey || apiKey === 'your_resend_api_key_here') {
+      console.error('❌ Resend API key not configured!');
+      console.error('📝 Please edit config/email.config.ts and add your Resend API key');
+      console.error('🔗 Get your key at: https://resend.com/api-keys');
+      
+      // Fallback to mock mode
+      otpStorage.set(email.toLowerCase(), {
+        otp: '123456',
+        expiresAt,
+        attempts: 0,
+      });
+
+      return {
+        success: true,
+        message: 'Email service not configured. Using mock OTP: 123456',
       };
     }
 
@@ -89,7 +106,7 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
                 <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                   <tr>
                     <td style="padding: 48px 40px; text-align: center; background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%); border-radius: 16px 16px 0 0;">
-                      <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">🏡 New Home Finder</h1>
+                      <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">🏡 ${EmailConfig.APP_NAME}</h1>
                     </td>
                   </tr>
                   <tr>
@@ -107,14 +124,14 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
                         This code will expire in <strong style="color: #2563EB;">${OTP_EXPIRY_MINUTES} minutes</strong>.
                       </p>
                       <p style="margin: 16px 0 0; color: #64748b; font-size: 14px; line-height: 1.6;">
-                        If you didn't request this code, please ignore this email.
+                        If you did not request this code, please ignore this email.
                       </p>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 24px 40px; background-color: #f8fafc; border-radius: 0 0 16px 16px; text-align: center;">
                       <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                        © ${new Date().getFullYear()} New Home Finder. All rights reserved.
+                        © ${new Date().getFullYear()} ${EmailConfig.APP_NAME}. All rights reserved.
                       </p>
                     </td>
                   </tr>
@@ -135,7 +152,7 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
       body: JSON.stringify({
         from: fromEmail,
         to: email,
-        subject: `Your New Home Finder verification code: ${otp}`,
+        subject: `Your ${EmailConfig.APP_NAME} verification code: ${otp}`,
         html: emailHtml,
       }),
     });
