@@ -20,15 +20,22 @@ export default function RegisterScreen() {
 
   const [step, setStep] = useState<'form' | 'otp'>('form');
   const [name, setName] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSendOTP = async () => {
-    if (!name || !mobile || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       showAlert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showAlert('Error', 'Please enter a valid email address');
       return;
     }
 
@@ -44,11 +51,11 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      await sendOTP(mobile);
-      showAlert('OTP Sent', 'Please check your mobile for the verification code');
+      await sendOTP(email);
+      showAlert('Verification Code Sent', 'Please check your email for the verification code');
       setStep('otp');
     } catch (error) {
-      showAlert('Error', error instanceof Error ? error.message : 'Failed to send OTP');
+      showAlert('Error', error instanceof Error ? error.message : 'Failed to send verification code');
     } finally {
       setLoading(false);
     }
@@ -56,20 +63,20 @@ export default function RegisterScreen() {
 
   const handleVerifyAndRegister = async () => {
     if (!otp) {
-      showAlert('Error', 'Please enter OTP');
+      showAlert('Error', 'Please enter verification code');
       return;
     }
 
     setLoading(true);
     try {
-      const isValid = await verifyOTP(mobile, otp);
+      const isValid = await verifyOTP(email, otp);
       if (!isValid) {
-        showAlert('Error', 'Invalid OTP');
+        showAlert('Error', 'Invalid verification code');
         setLoading(false);
         return;
       }
 
-      await register(mobile, password, name, role);
+      await register(email, password, name, role);
       showAlert('Success', 'Registration successful!');
       router.replace('/dashboard');
     } catch (error) {
@@ -111,7 +118,7 @@ export default function RegisterScreen() {
               {role === 'finder' ? 'Property Finder' : 'Property Owner'} Registration
             </Text>
             <Text style={styles.subtitle}>
-              {step === 'form' ? 'Create your account to get started' : 'Enter OTP sent to your mobile'}
+              {step === 'form' ? 'Create your account to get started' : 'Enter verification code sent to your email'}
             </Text>
           </View>
 
@@ -126,13 +133,13 @@ export default function RegisterScreen() {
               />
 
               <Input
-                label="Mobile Number"
-              placeholder="Enter your mobile number"
-              value={mobile}
-              onChangeText={setMobile}
-              keyboardType="phone-pad"
-              leftIcon="phone"
-              autoCapitalize="none"
+                label="Email Address"
+                placeholder="Enter your email address"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                leftIcon="email"
+                autoCapitalize="none"
               />
 
               <Input
@@ -156,7 +163,7 @@ export default function RegisterScreen() {
               />
 
               <Button
-                title="Send OTP"
+                title="Send Verification Code"
                 onPress={handleSendOTP}
                 loading={loading}
                 variant="gradient"
@@ -173,16 +180,16 @@ export default function RegisterScreen() {
           ) : (
             <View style={styles.form}>
               <Input
-                label="Enter OTP"
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChangeText={setOtp}
-              keyboardType="number-pad"
-              leftIcon="security"
-              maxLength={6}
+                label="Enter Verification Code"
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                leftIcon="security"
+                maxLength={6}
               />
 
-              <Text style={styles.hint}>OTP sent to {mobile}</Text>
+              <Text style={styles.hint}>Code sent to {email}</Text>
 
               <Button
                 title="Verify and Register"
@@ -193,7 +200,7 @@ export default function RegisterScreen() {
               />
 
               <Pressable onPress={handleSendOTP} disabled={loading}>
-                <Text style={[styles.resend, loading && { opacity: 0.5 }]}>Resend OTP</Text>
+                <Text style={[styles.resend, loading && { opacity: 0.5 }]}>Resend Code</Text>
               </Pressable>
             </View>
           )}

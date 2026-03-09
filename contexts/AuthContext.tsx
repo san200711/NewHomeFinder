@@ -1,17 +1,17 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SMSService from '@/services/sms';
+import * as EmailService from '@/services/email';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (mobile: string, password: string, role: UserRole) => Promise<void>;
-  register: (mobile: string, password: string, name: string, role: UserRole) => Promise<void>;
+  login: (email: string, password: string, role: UserRole) => Promise<void>;
+  register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
-  verifyOTP: (mobile: string, otp: string) => Promise<boolean>;
-  sendOTP: (mobile: string) => Promise<void>;
-  resetPassword: (mobile: string, otp: string, newPassword: string) => Promise<void>;
+  verifyOTP: (email: string, otp: string) => Promise<boolean>;
+  sendOTP: (email: string) => Promise<void>;
+  resetPassword: (email: string, otp: string, newPassword: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,9 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const sendOTP = async (mobile: string) => {
+  const sendOTP = async (email: string) => {
     try {
-      const result = await SMSService.sendOTP(mobile);
+      const result = await EmailService.sendOTP(email);
       if (!result.success) {
         throw new Error(result.message);
       }
@@ -56,9 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const verifyOTP = async (mobile: string, otp: string): Promise<boolean> => {
+  const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
     try {
-      const result = await SMSService.verifyOTP(mobile, otp);
+      const result = await EmailService.verifyOTP(email, otp);
       if (result.success) {
         console.log('✅', result.message);
         return true;
@@ -72,18 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (mobile: string, password: string, name: string, role: UserRole) => {
+  const register = async (email: string, password: string, name: string, role: UserRole) => {
     const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
     const users = usersData ? JSON.parse(usersData) : [];
 
-    const existingUser = users.find((u: any) => u.mobile === mobile);
+    const existingUser = users.find((u: any) => u.email === email);
     if (existingUser) {
-      throw new Error('Mobile number already registered');
+      throw new Error('Email already registered');
     }
 
     const newUser: User = {
       id: Date.now().toString(),
-      mobile,
+      email,
       name,
       role,
       createdAt: new Date().toISOString(),
@@ -95,12 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   };
 
-  const login = async (mobile: string, password: string, role: UserRole) => {
+  const login = async (email: string, password: string, role: UserRole) => {
     const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
     const users = usersData ? JSON.parse(usersData) : [];
 
     const foundUser = users.find(
-      (u: any) => u.mobile === mobile && u.password === password && u.role === role
+      (u: any) => u.email === email && u.password === password && u.role === role
     );
 
     if (!foundUser) {
@@ -112,8 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userWithoutPassword);
   };
 
-  const resetPassword = async (mobile: string, otp: string, newPassword: string) => {
-    const isValid = await verifyOTP(mobile, otp);
+  const resetPassword = async (email: string, otp: string, newPassword: string) => {
+    const isValid = await verifyOTP(email, otp);
     if (!isValid) {
       throw new Error('Invalid OTP');
     }
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
     const users = usersData ? JSON.parse(usersData) : [];
 
-    const userIndex = users.findIndex((u: any) => u.mobile === mobile);
+    const userIndex = users.findIndex((u: any) => u.email === email);
     if (userIndex === -1) {
       throw new Error('User not found');
     }

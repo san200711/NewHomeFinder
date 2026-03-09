@@ -2,10 +2,10 @@ export type UserRole = 'finder' | 'owner';
 
 export interface User {
   id: string;
-  mobile: string;
+  email: string;
   role: UserRole;
   name: string;
-  email?: string;
+  mobile?: string;
   createdAt: string;
 }
 

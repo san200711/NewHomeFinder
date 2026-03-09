@@ -17,26 +17,33 @@ export default function ForgotPasswordScreen() {
   const { sendOTP, verifyOTP, resetPassword } = useAuth();
   const { showAlert } = useAlert();
 
-  const [step, setStep] = useState<'mobile' | 'otp' | 'password'>('mobile');
-  const [mobile, setMobile] = useState('');
+  const [step, setStep] = useState<'email' | 'otp' | 'password'>('email');
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSendOTP = async () => {
-    if (!mobile) {
-      showAlert('Error', 'Please enter mobile number');
+    if (!email) {
+      showAlert('Error', 'Please enter email address');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showAlert('Error', 'Please enter a valid email address');
       return;
     }
 
     setLoading(true);
     try {
-      await sendOTP(mobile);
-      showAlert('OTP Sent', 'Please check your mobile for OTP (Use: 123456)');
+      await sendOTP(email);
+      showAlert('Verification Code Sent', 'Please check your email for the code');
       setStep('otp');
     } catch (error) {
-      showAlert('Error', 'Failed to send OTP');
+      showAlert('Error', 'Failed to send verification code');
     } finally {
       setLoading(false);
     }
@@ -44,15 +51,15 @@ export default function ForgotPasswordScreen() {
 
   const handleVerifyOTP = async () => {
     if (!otp) {
-      showAlert('Error', 'Please enter OTP');
+      showAlert('Error', 'Please enter verification code');
       return;
     }
 
     setLoading(true);
     try {
-      const isValid = await verifyOTP(mobile, otp);
+      const isValid = await verifyOTP(email, otp);
       if (!isValid) {
-        showAlert('Error', 'Invalid OTP');
+        showAlert('Error', 'Invalid verification code');
         setLoading(false);
         return;
       }
@@ -82,7 +89,7 @@ export default function ForgotPasswordScreen() {
 
     setLoading(true);
     try {
-      await resetPassword(mobile, otp, newPassword);
+      await resetPassword(email, otp, newPassword);
       showAlert('Success', 'Password reset successful!');
       router.replace({ pathname: '/auth/login', params: { role } });
     } catch (error) {
@@ -96,10 +103,10 @@ export default function ForgotPasswordScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Pressable
         onPress={() => {
-          if (step === 'mobile') {
+          if (step === 'email') {
             router.back();
           } else if (step === 'otp') {
-            setStep('mobile');
+            setStep('email');
           } else {
             setStep('otp');
           }
@@ -114,26 +121,26 @@ export default function ForgotPasswordScreen() {
           <MaterialIcons name="lock-reset" size={60} color={theme.colors.primary} />
           <Text style={styles.title}>Forgot Password</Text>
           <Text style={styles.subtitle}>
-            {step === 'mobile' && 'Enter your mobile number to reset password'}
-            {step === 'otp' && 'Enter OTP sent to your mobile'}
+            {step === 'email' && 'Enter your email address to reset password'}
+            {step === 'otp' && 'Enter verification code sent to your email'}
             {step === 'password' && 'Create a new password'}
           </Text>
         </View>
 
-        {step === 'mobile' && (
+        {step === 'email' && (
           <View style={styles.form}>
             <Input
-              label="Mobile Number"
-              placeholder="Enter your mobile number"
-              value={mobile}
-              onChangeText={setMobile}
-              keyboardType="phone-pad"
-              leftIcon="phone"
+              label="Email Address"
+              placeholder="Enter your email address"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              leftIcon="email"
               autoCapitalize="none"
             />
 
             <Button
-              title="Send OTP"
+              title="Send Verification Code"
               onPress={handleSendOTP}
               loading={loading}
               variant="gradient"
@@ -145,8 +152,8 @@ export default function ForgotPasswordScreen() {
         {step === 'otp' && (
           <View style={styles.form}>
             <Input
-              label="Enter OTP"
-              placeholder="Enter 6-digit OTP"
+              label="Enter Verification Code"
+              placeholder="Enter 6-digit code"
               value={otp}
               onChangeText={setOtp}
               keyboardType="number-pad"
@@ -154,10 +161,10 @@ export default function ForgotPasswordScreen() {
               maxLength={6}
             />
 
-            <Text style={styles.hint}>OTP sent to {mobile}</Text>
+            <Text style={styles.hint}>Code sent to {email}</Text>
 
             <Button
-              title="Verify OTP"
+              title="Verify Code"
               onPress={handleVerifyOTP}
               loading={loading}
               variant="gradient"
@@ -165,7 +172,7 @@ export default function ForgotPasswordScreen() {
             />
 
             <Pressable onPress={handleSendOTP}>
-              <Text style={styles.resend}>Resend OTP</Text>
+              <Text style={styles.resend}>Resend Code</Text>
             </Pressable>
           </View>
         )}

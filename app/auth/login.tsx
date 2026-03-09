@@ -18,19 +18,19 @@ export default function LoginScreen() {
   const { login } = useAuth();
   const { showAlert } = useAlert();
 
-  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!mobile || !password) {
+    if (!email || !password) {
       showAlert('Error', 'Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
-      await login(mobile, password, role);
+      await login(email, password, role);
       router.replace('/dashboard');
     } catch (error) {
       showAlert('Login Failed', error instanceof Error ? error.message : 'Invalid credentials');
@@ -66,13 +66,13 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <Input
-            label="Mobile Number"
-            placeholder="Enter your mobile number"
-            value={mobile}
-            onChangeText={setMobile}
-            keyboardType="phone-pad"
-            leftIcon="phone"
-            autoCapitalize="none"
+              label="Email Address"
+              placeholder="Enter your email address"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              leftIcon="email"
+              autoCapitalize="none"
             />
 
             <Input
