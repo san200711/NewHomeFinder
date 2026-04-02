@@ -8,6 +8,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,12 +23,14 @@ import { useAlert } from '@/template';
 // ─── OTP Input ────────────────────────────────────────────────────────────────
 function OTPInput({ value, onChange, accentColor }: { value: string; onChange: (v: string) => void; accentColor: string }) {
   return (
-    <View style={otpStyles.row}>
-      {Array(6).fill('').map((_, i) => (
-        <View key={i} style={[otpStyles.box, value[i] ? { ...otpStyles.boxFilled, borderColor: accentColor } : otpStyles.boxEmpty]}>
-          <Text style={otpStyles.digit}>{value[i] || ''}</Text>
-        </View>
-      ))}
+    <View style={otpStyles.wrapper}>
+      <View style={otpStyles.row} pointerEvents="none">
+        {Array(6).fill('').map((_, i) => (
+          <View key={i} style={[otpStyles.box, value[i] ? { ...otpStyles.boxFilled, borderColor: accentColor } : otpStyles.boxEmpty]}>
+            <Text style={otpStyles.digit}>{value[i] || ''}</Text>
+          </View>
+        ))}
+      </View>
       <TextInput
         style={otpStyles.hidden}
         value={value}
@@ -34,18 +38,26 @@ function OTPInput({ value, onChange, accentColor }: { value: string; onChange: (
         keyboardType="number-pad"
         maxLength={6}
         autoFocus
+        caretHidden
+        contextMenuHidden
       />
     </View>
   );
 }
 
 const otpStyles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 10, justifyContent: 'center', position: 'relative' },
+  wrapper: { position: 'relative', alignItems: 'center' },
+  row: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
   box: { width: 46, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
   boxEmpty: { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' },
-  boxFilled: { backgroundColor: '#EFF6FF' },
+  boxFilled: { backgroundColor: '#FFF7ED' },
   digit: { fontSize: 22, fontWeight: '700', color: '#0F172A' },
-  hidden: { position: 'absolute', opacity: 0, width: '100%', height: '100%' },
+  hidden: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    opacity: 0,
+    color: 'transparent',
+  },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -163,12 +175,18 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16 }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16 }]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
           {/* Back */}
           <Pressable
             onPress={() => {
@@ -321,7 +339,8 @@ export default function ForgotPasswordScreen() {
               <Text style={[styles.bottomLink, { color: accentColor }]}>Sign In</Text>
             </Pressable>
           </View>
-        </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );

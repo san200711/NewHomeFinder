@@ -8,6 +8,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,16 +30,18 @@ function OTPInput({ value, onChange }: { value: string; onChange: (v: string) =>
   const filled = value.split('');
 
   return (
-    <View style={otpStyles.row}>
-      {digits.map((_, i) => (
-        <View
-          key={i}
-          style={[otpStyles.box, filled[i] ? otpStyles.boxFilled : otpStyles.boxEmpty]}
-        >
-          <Text style={otpStyles.digit}>{filled[i] || ''}</Text>
-        </View>
-      ))}
-      {/* Hidden real input */}
+    <View style={otpStyles.wrapper}>
+      <View style={otpStyles.row} pointerEvents="none">
+        {digits.map((_, i) => (
+          <View
+            key={i}
+            style={[otpStyles.box, filled[i] ? otpStyles.boxFilled : otpStyles.boxEmpty]}
+          >
+            <Text style={otpStyles.digit}>{filled[i] || ''}</Text>
+          </View>
+        ))}
+      </View>
+      {/* Hidden real input sits on top */}
       <TextInput
         style={otpStyles.hidden}
         value={value}
@@ -45,13 +49,16 @@ function OTPInput({ value, onChange }: { value: string; onChange: (v: string) =>
         keyboardType="number-pad"
         maxLength={6}
         autoFocus
+        caretHidden
+        contextMenuHidden
       />
     </View>
   );
 }
 
 const otpStyles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 10, justifyContent: 'center', position: 'relative' },
+  wrapper: { position: 'relative', alignItems: 'center' },
+  row: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
   box: {
     width: 46,
     height: 56,
@@ -63,7 +70,12 @@ const otpStyles = StyleSheet.create({
   boxEmpty: { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' },
   boxFilled: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
   digit: { fontSize: 22, fontWeight: '700', color: '#0F172A' },
-  hidden: { position: 'absolute', opacity: 0, width: '100%', height: '100%' },
+  hidden: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    opacity: 0,
+    color: 'transparent',
+  },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -228,12 +240,18 @@ export default function RegisterScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16 }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16 }]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
           {/* Back */}
           <Pressable onPress={() => (step === 'otp' ? setStep('form') : router.back())} style={styles.backBtn} hitSlop={12}>
             <View style={styles.backBtnInner}>
@@ -345,7 +363,8 @@ export default function RegisterScreen() {
               </>
             )}
           </View>
-        </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );
