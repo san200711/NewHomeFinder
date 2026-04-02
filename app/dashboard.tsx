@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Animated, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -141,15 +141,10 @@ export default function DashboardScreen() {
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearch}
               returnKeyType="search"
-              blurOnSubmit={true}
               style={styles.searchInput}
             />
             {searchQuery.length > 0 && (
-              <Pressable
-                onPress={() => { setSearchQuery(''); Keyboard.dismiss(); }}
-                style={styles.clearButton}
-                hitSlop={8}
-              >
+              <Pressable onPress={() => setSearchQuery('')} style={styles.clearButton}>
                 <MaterialIcons name="close" size={18} color={theme.colors.textLight} />
               </Pressable>
             )}
