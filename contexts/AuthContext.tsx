@@ -9,17 +9,17 @@ interface AuthContextType {
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
-  verifyOTP: (email: string, otp: string) => Promise<boolean>;
-  sendOTP: (email: string) => Promise<void>;
+  verifyOTP: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
+  sendOTP: (email: string) => Promise<{ success: boolean; message: string }>;
   resetPassword: (email: string, otp: string, newPassword: string) => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  USER: '@newhomefinder_user',
-  USERS_DB: '@newhomefinder_users_db',
-  OTP_STORAGE: '@newhomefinder_otp',
+  USER: '@nhf_user',
+  USERS_DB: '@nhf_users_db',
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -33,9 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadUser = async () => {
     try {
       const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER);
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
+      if (userData) setUser(JSON.parse(userData));
     } catch (error) {
       console.error('Error loading user:', error);
     } finally {
@@ -43,47 +41,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const sendOTP = async (email: string) => {
-    try {
-      const result = await EmailService.sendOTP(email);
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-      console.log('✅', result.message);
-    } catch (error) {
-      console.error('Failed to send OTP:', error);
-      throw error;
-    }
+  const sendOTP = async (email: string): Promise<{ success: boolean; message: string }> => {
+    return EmailService.sendOTP(email);
   };
 
-  const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
-    try {
-      const result = await EmailService.verifyOTP(email, otp);
-      if (result.success) {
-        console.log('✅', result.message);
-        return true;
-      } else {
-        console.warn('⚠️', result.message);
-        return false;
-      }
-    } catch (error) {
-      console.error('Failed to verify OTP:', error);
-      return false;
-    }
+  const verifyOTP = async (
+    email: string,
+    otp: string
+  ): Promise<{ success: boolean; message: string }> => {
+    return EmailService.verifyOTP(email, otp);
   };
 
-  const register = async (email: string, password: string, name: string, role: UserRole) => {
+  const register = async (
+    email: string,
+    password: string,
+    name: string,
+    role: UserRole
+  ) => {
     const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
-    const users = usersData ? JSON.parse(usersData) : [];
+    const users: any[] = usersData ? JSON.parse(usersData) : [];
 
-    const existingUser = users.find((u: any) => u.email === email);
-    if (existingUser) {
-      throw new Error('Email already registered');
+    if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
+      throw new Error('Email is already registered. Please login instead.');
     }
 
     const newUser: User = {
       id: Date.now().toString(),
-      email,
+      email: email.toLowerCase(),
       name,
       role,
       createdAt: new Date().toISOString(),
@@ -97,37 +81,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, role: UserRole) => {
     const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
-    const users = usersData ? JSON.parse(usersData) : [];
+    const users: any[] = usersData ? JSON.parse(usersData) : [];
 
-    const foundUser = users.find(
-      (u: any) => u.email === email && u.password === password && u.role === role
+    const found = users.find(
+      (u) =>
+        u.email.toLowerCase() === email.toLowerCase() &&
+        u.password === password &&
+        u.role === role
     );
 
-    if (!foundUser) {
-      throw new Error('Invalid credentials');
+    if (!found) {
+      throw new Error('Invalid email, password or role. Please check and try again.');
     }
 
-    const { password: _, ...userWithoutPassword } = foundUser;
+    const { password: _pw, ...userWithoutPassword } = found;
     await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userWithoutPassword));
     setUser(userWithoutPassword);
   };
 
   const resetPassword = async (email: string, otp: string, newPassword: string) => {
-    const isValid = await verifyOTP(email, otp);
-    if (!isValid) {
-      throw new Error('Invalid OTP');
-    }
+    const result = await EmailService.verifyOTP(email, otp);
+    if (!result.success) throw new Error(result.message);
 
     const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
-    const users = usersData ? JSON.parse(usersData) : [];
+    const users: any[] = usersData ? JSON.parse(usersData) : [];
 
-    const userIndex = users.findIndex((u: any) => u.email === email);
-    if (userIndex === -1) {
-      throw new Error('User not found');
-    }
+    const idx = users.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (idx === -1) throw new Error('No account found with this email.');
 
-    users[userIndex].password = newPassword;
+    users[idx].password = newPassword;
     await AsyncStorage.setItem(STORAGE_KEYS.USERS_DB, JSON.stringify(users));
+  };
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) throw new Error('Not logged in');
+    const updated = { ...user, ...updates };
+    await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
+    setUser(updated);
+
+    const usersData = await AsyncStorage.getItem(STORAGE_KEYS.USERS_DB);
+    const users: any[] = usersData ? JSON.parse(usersData) : [];
+    const idx = users.findIndex((u) => u.id === user.id);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...updates };
+      await AsyncStorage.setItem(STORAGE_KEYS.USERS_DB, JSON.stringify(users));
+    }
   };
 
   const logout = async () => {
@@ -137,16 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        login,
-        register,
-        logout,
-        verifyOTP,
-        sendOTP,
-        resetPassword,
-      }}
+      value={{ user, isLoading, login, register, logout, verifyOTP, sendOTP, resetPassword, updateProfile }}
     >
       {children}
     </AuthContext.Provider>

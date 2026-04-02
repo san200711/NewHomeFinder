@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
-import { theme } from '@/constants/theme';
-import { Button } from '@/components/ui/Button';
+import { Image } from 'expo-image';
 import { UserRole } from '@/types';
+
+const BG_IMAGE =
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400&auto=format&fit=crop&q=80';
+
+const FEATURES = [
+  { icon: 'search' as const, label: 'Smart Search' },
+  { icon: 'map' as const, label: 'Map View' },
+  { icon: 'star' as const, label: 'Reviews' },
+  { icon: 'favorite' as const, label: 'Favorites' },
+];
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -16,106 +24,169 @@ export default function WelcomeScreen() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
   const handleContinue = () => {
-    if (selectedRole) {
-      router.push({
-        pathname: '/auth/login',
-        params: { role: selectedRole },
-      });
-    }
+    if (!selectedRole) return;
+    router.push({ pathname: '/auth/login', params: { role: selectedRole } });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
       <StatusBar style="light" />
-      <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80' }}
-        style={styles.backgroundImage}
-        resizeMode="cover"
+
+      {/* Background */}
+      <Image
+        source={{ uri: BG_IMAGE }}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="cover"
+        transition={400}
+      />
+      <LinearGradient
+        colors={['rgba(15,23,42,0.5)', 'rgba(15,23,42,0.2)', 'rgba(15,23,42,0.85)']}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24 }]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <LinearGradient
-          colors={['rgba(37, 99, 235, 0.95)', 'rgba(59, 130, 246, 0.9)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
-        >
-          <View style={{ paddingTop: insets.top }} />
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
-            <View style={styles.header}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="home-work" size={80} color={theme.colors.white} />
-              </View>
-              <Text style={styles.appName}>New Home Finder</Text>
-              <Text style={styles.tagline}>Find Your Dream Property</Text>
-            </View>
+        {/* Hero top */}
+        <View style={styles.heroTop}>
+          <LinearGradient colors={['#2563EB', '#7C3AED']} style={styles.logoWrap}>
+            <MaterialIcons name="home-work" size={36} color="#fff" />
+          </LinearGradient>
+          <Text style={styles.appName}>New Home Finder</Text>
+          <Text style={styles.tagline}>Your Dream Property Awaits</Text>
 
-            <View style={styles.content}>
-              <Text style={styles.sectionTitle}>Choose Your Role</Text>
-              <Text style={styles.sectionDescription}>Select how you want to use the app</Text>
-
-              <View style={styles.roleCards}>
-                <RoleCard
-                  role="finder"
-                  title="Property Finder"
-                  description="Search and find your dream home or land"
-                  icon="search"
-                  selected={selectedRole === 'finder'}
-                  onSelect={() => setSelectedRole('finder')}
-                />
-                <RoleCard
-                  role="owner"
-                  title="Property Owner"
-                  description="List and manage your properties"
-                  icon="business"
-                  selected={selectedRole === 'owner'}
-                  onSelect={() => setSelectedRole('owner')}
-                />
+          {/* Feature chips */}
+          <View style={styles.featuresRow}>
+            {FEATURES.map((f) => (
+              <View key={f.label} style={styles.featureChip}>
+                <MaterialIcons name={f.icon} size={14} color="#fff" />
+                <Text style={styles.featureLabel}>{f.label}</Text>
               </View>
+            ))}
+          </View>
+        </View>
 
-              <View style={styles.actions}>
-                <Button
-                  title="Continue"
-                  onPress={handleContinue}
-                  disabled={!selectedRole}
-                  size="large"
-                  style={styles.button}
-                />
-                <Text style={styles.footerText}>
-                  By continuing, you agree to our Terms & Privacy Policy
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-        </LinearGradient>
-      </ImageBackground>
+        {/* Bottom card */}
+        <View style={styles.card}>
+          {/* Pill indicator */}
+          <View style={styles.pill} />
+
+          <Text style={styles.cardTitle}>Get Started</Text>
+          <Text style={styles.cardSub}>Choose how you want to use the app</Text>
+
+          {/* Role Cards */}
+          <View style={styles.rolesRow}>
+            <RoleCard
+              role="finder"
+              label="Property Finder"
+              description="Search & discover properties"
+              icon="search"
+              gradient={['#2563EB', '#06B6D4']}
+              selected={selectedRole === 'finder'}
+              onSelect={() => setSelectedRole('finder')}
+            />
+            <RoleCard
+              role="owner"
+              label="Property Owner"
+              description="List & manage properties"
+              icon="business"
+              gradient={['#7C3AED', '#EC4899']}
+              selected={selectedRole === 'owner'}
+              onSelect={() => setSelectedRole('owner')}
+            />
+          </View>
+
+          {/* CTA Button */}
+          <Pressable
+            onPress={handleContinue}
+            disabled={!selectedRole}
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <LinearGradient
+              colors={
+                selectedRole === 'owner'
+                  ? ['#7C3AED', '#EC4899']
+                  : selectedRole === 'finder'
+                  ? ['#2563EB', '#06B6D4']
+                  : ['#CBD5E1', '#CBD5E1']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.ctaBtn, !selectedRole && { opacity: 0.6 }]}
+            >
+              <Text style={styles.ctaBtnText}>
+                {selectedRole ? `Continue as ${selectedRole === 'finder' ? 'Finder' : 'Owner'}` : 'Select a Role'}
+              </Text>
+              {selectedRole ? (
+                <MaterialIcons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+              ) : null}
+            </LinearGradient>
+          </Pressable>
+
+          {/* Register link */}
+          <View style={styles.registerRow}>
+            <Text style={styles.registerText}>New here? </Text>
+            <Pressable
+              onPress={() => {
+                if (selectedRole) router.push({ pathname: '/auth/register', params: { role: selectedRole } });
+                else showNoRoleHint();
+              }}
+            >
+              <Text style={styles.registerLink}>Create Account</Text>
+            </Pressable>
+          </View>
+
+          <Text style={styles.terms}>
+            By continuing you agree to our Terms of Service & Privacy Policy
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
+function showNoRoleHint() {
+  // gentle no-op — user must pick role first
+}
+
 function RoleCard({
-  role,
-  title,
+  label,
   description,
   icon,
+  gradient,
   selected,
   onSelect,
 }: {
   role: UserRole;
-  title: string;
+  label: string;
   description: string;
   icon: keyof typeof MaterialIcons.glyphMap;
+  gradient: [string, string];
   selected: boolean;
   onSelect: () => void;
 }) {
   return (
-    <Pressable onPress={onSelect} style={[styles.roleCard, selected && styles.roleCardSelected]}>
-      <View style={[styles.roleIconContainer, selected && styles.roleIconContainerSelected]}>
-        <MaterialIcons name={icon} size={40} color={selected ? theme.colors.white : theme.colors.primary} />
-      </View>
-      <Text style={[styles.roleTitle, selected && styles.roleTitleSelected]}>{title}</Text>
-      <Text style={[styles.roleDescription, selected && styles.roleDescriptionSelected]}>{description}</Text>
+    <Pressable
+      onPress={onSelect}
+      style={({ pressed }) => [
+        styles.roleCard,
+        selected && styles.roleCardSelected,
+        { opacity: pressed ? 0.9 : 1 },
+      ]}
+    >
+      <LinearGradient
+        colors={selected ? gradient : ['#F1F5F9', '#F1F5F9']}
+        style={styles.roleIconWrap}
+      >
+        <MaterialIcons name={icon} size={28} color={selected ? '#fff' : '#64748B'} />
+      </LinearGradient>
+      <Text style={[styles.roleLabel, selected && { color: gradient[0] }]}>{label}</Text>
+      <Text style={styles.roleDesc}>{description}</Text>
       {selected && (
-        <View style={styles.checkmark}>
-          <MaterialIcons name="check-circle" size={24} color={theme.colors.primary} />
+        <View style={[styles.checkBadge, { backgroundColor: gradient[0] }]}>
+          <MaterialIcons name="check" size={12} color="#fff" />
         </View>
       )}
     </Pressable>
@@ -123,132 +194,61 @@ function RoleCard({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
+  root: { flex: 1, backgroundColor: '#0F172A' },
+  scroll: { flexGrow: 1 },
+
+  heroTop: { alignItems: 'center', paddingHorizontal: 24, paddingBottom: 32 },
+  logoWrap: {
+    width: 76, height: 76, borderRadius: 38,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    shadowColor: '#2563EB', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 12,
   },
-  backgroundImage: {
-    flex: 1,
+  appName: { fontSize: 32, fontWeight: '800', color: '#fff', letterSpacing: -0.5, marginBottom: 6 },
+  tagline: { fontSize: 16, color: 'rgba(255,255,255,0.75)', marginBottom: 20 },
+  featuresRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
+  featureChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
   },
-  gradient: {
-    flex: 1,
+  featureLabel: { fontSize: 12, fontWeight: '600', color: '#fff' },
+
+  card: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 36, borderTopRightRadius: 36,
+    paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -6 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 16,
   },
-  iconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.full,
-    marginBottom: theme.spacing.md,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 32,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  appName: {
-    fontSize: theme.fontSize.xxxl,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.white,
-    marginTop: theme.spacing.lg,
-  },
-  tagline: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.white,
-    marginTop: theme.spacing.sm,
-    opacity: 0.9,
-  },
-  content: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    padding: theme.spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  sectionDescription: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.lg,
-  },
-  roleCards: {
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-  },
+  pill: { width: 40, height: 4, backgroundColor: '#E2E8F0', borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
+  cardTitle: { fontSize: 24, fontWeight: '700', color: '#0F172A', marginBottom: 4 },
+  cardSub: { fontSize: 14, color: '#64748B', marginBottom: 20 },
+
+  rolesRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   roleCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    flex: 1, backgroundColor: '#F8FAFC', borderRadius: 20, padding: 16,
+    borderWidth: 2, borderColor: '#E2E8F0', position: 'relative',
+    alignItems: 'flex-start',
   },
-  roleCardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: '#EFF6FF',
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 5,
+  roleCardSelected: { borderColor: '#2563EB', backgroundColor: '#EFF6FF' },
+  roleIconWrap: {
+    width: 52, height: 52, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  roleIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.md,
+  roleLabel: { fontSize: 14, fontWeight: '700', color: '#0F172A', marginBottom: 4 },
+  roleDesc: { fontSize: 12, color: '#64748B', lineHeight: 16 },
+  checkBadge: {
+    position: 'absolute', top: 12, right: 12,
+    width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
   },
-  roleIconContainerSelected: {
-    backgroundColor: theme.colors.primary,
+
+  ctaBtn: {
+    height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', marginBottom: 16,
+    shadowColor: '#2563EB', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8,
   },
-  roleTitle: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  roleTitleSelected: {
-    color: theme.colors.primary,
-  },
-  roleDescription: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
-  },
-  roleDescriptionSelected: {
-    color: theme.colors.text,
-  },
-  checkmark: {
-    position: 'absolute',
-    top: theme.spacing.md,
-    right: theme.spacing.md,
-  },
-  actions: {
-    gap: theme.spacing.md,
-  },
-  button: {
-    width: '100%',
-  },
-  footerText: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
+  ctaBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  registerText: { fontSize: 14, color: '#64748B' },
+  registerLink: { fontSize: 14, fontWeight: '700', color: '#2563EB' },
+  terms: { fontSize: 11, color: '#94A3B8', textAlign: 'center', lineHeight: 16 },
 });
