@@ -178,7 +178,7 @@ export default function SettingsScreen() {
               <MaterialIcons name="phone" size={20} color={theme.colors.primary} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Mobile Number</Text>
-                <Text style={styles.infoValue}>{user.mobile}</Text>
+                <Text style={styles.infoValue}>{user.mobile || user.email || 'Not set'}</Text>
               </View>
               <View style={styles.verifiedBadge}>
                 <MaterialIcons name="verified" size={16} color={theme.colors.secondary} />

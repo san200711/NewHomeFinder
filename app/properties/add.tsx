@@ -86,7 +86,7 @@ export default function AddPropertyScreen() {
       await addProperty({
         ownerId: user.id,
         ownerName: user.name,
-        ownerMobile: user.mobile,
+        ownerMobile: user.mobile || '',
         category,
         title,
         description,

@@ -40,25 +40,35 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (propertiesData) {
-        const loadedProperties = JSON.parse(propertiesData);
-        // Migrate old properties without coordinates
-        const migratedProperties = loadedProperties.map((prop: Property, index: number) => {
-          if (!prop.coordinates) {
-            // Add default coordinates with random offset
-            const offset = 0.15;
-            return {
-              ...prop,
-              coordinates: {
-                latitude: 28.6139 + (Math.random() - 0.5) * offset,
-                longitude: 77.209 + (Math.random() - 0.5) * offset,
-              },
-            };
-          }
-          return prop;
-        });
-        setProperties(migratedProperties);
-        // Save migrated data
-        await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(migratedProperties));
+        const loadedProperties: Property[] = JSON.parse(propertiesData);
+        // Check if all 5 categories exist; regenerate if any are missing
+        const categories = new Set(loadedProperties.map((p) => p.category));
+        const allCategories: PropertyCategory[] = ['home-rent', 'home-buy', 'home-sell', 'land-buy', 'land-sell'];
+        const missingCategories = allCategories.filter((c) => !categories.has(c));
+
+        if (missingCategories.length > 0) {
+          // Regenerate sample data to include missing categories
+          const freshProperties = generateSampleProperties();
+          setProperties(freshProperties);
+          await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(freshProperties));
+        } else {
+          // Migrate old properties without coordinates
+          const migratedProperties = loadedProperties.map((prop) => {
+            if (!prop.coordinates) {
+              const offset = 0.15;
+              return {
+                ...prop,
+                coordinates: {
+                  latitude: 28.6139 + (Math.random() - 0.5) * offset,
+                  longitude: 77.209 + (Math.random() - 0.5) * offset,
+                },
+              };
+            }
+            return prop;
+          });
+          setProperties(migratedProperties);
+          await AsyncStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(migratedProperties));
+        }
       } else {
         // Initialize with sample data
         const sampleProperties = generateSampleProperties();
@@ -336,6 +346,55 @@ function generateSampleProperties(): Property[] {
     });
   });
 
+  // 20 Homes for Sell
+  const sellHomes = [
+    { title: 'Sell: Modern 3BHK Apartment', desc: 'Owner selling well-maintained 3BHK apartment with premium fittings, modular kitchen, and great connectivity. Priced to sell quickly.', beds: 3, baths: 2, size: 1550, price: 7800000, amenities: ['Parking', 'Lift', 'Security', 'Power Backup'], img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop' },
+    { title: 'Sell: Luxury Penthouse', desc: 'Rare selling opportunity for a luxury penthouse with panoramic city views, private terrace, and premium interiors. Ready to move in.', beds: 4, baths: 4, size: 3800, price: 18000000, amenities: ['Penthouse', 'City Views', 'Terrace', 'Luxury Finishes'], img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format&fit=crop' },
+    { title: 'Sell: Cozy 2BHK Flat', desc: 'Charming 2BHK flat in established neighborhood. Freshly painted, updated kitchen, and excellent natural light. Great investment.', beds: 2, baths: 2, size: 1100, price: 4500000, amenities: ['Natural Light', 'Updated Kitchen', 'Parking'], img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop' },
+    { title: 'Sell: Spacious 4BHK Family Home', desc: 'Large family home in gated community with 4 bedrooms, study room, and lush garden. Schools and parks nearby. Moving abroad.', beds: 4, baths: 3, size: 2400, price: 11500000, amenities: ['Garden', 'Study Room', 'Gated', 'School Nearby'], img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800' },
+    { title: 'Sell: Investment 1BHK Studio', desc: 'High-yield investment studio in prime location near tech park. Currently rented at ₹18,000/month. Seller relocating.', beds: 1, baths: 1, size: 680, price: 3200000, amenities: ['Investment', 'Near Tech Park', 'Currently Rented'], img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800' },
+    { title: 'Sell: Duplex 3BHK Residence', desc: 'Unique duplex with separate floors for living and sleeping. Beautiful wooden interiors and private garden area.', beds: 3, baths: 3, size: 2100, price: 9200000, amenities: ['Duplex', 'Wooden Interiors', 'Private Garden'], img: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800' },
+    { title: 'Sell: Heritage Bungalow', desc: 'Magnificent heritage bungalow with period features on a large plot. Renovation opportunity or perfect luxury residence.', beds: 5, baths: 4, size: 4200, price: 22000000, amenities: ['Heritage', 'Large Plot', 'Period Features', 'Rare'], img: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=800' },
+    { title: 'Sell: Builder Floor 2BHK', desc: 'Independent builder floor with separate entrance, terrace rights, and full privacy. No maintenance charges.', beds: 2, baths: 2, size: 1300, price: 5800000, amenities: ['Builder Floor', 'Terrace Rights', 'Private Entrance', 'No Maintenance'], img: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800' },
+    { title: 'Sell: Golf View 3BHK', desc: 'Premium 3BHK with stunning golf course views, club membership included, and resort-style amenities.', beds: 3, baths: 3, size: 2050, price: 13500000, amenities: ['Golf View', 'Club Membership', 'Resort Amenities'], img: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800' },
+    { title: 'Sell: Eco-Friendly Villa', desc: 'Sustainable villa with solar panels, rainwater harvesting, and organic garden. Net-zero energy home.', beds: 3, baths: 2, size: 2600, price: 8700000, amenities: ['Solar Powered', 'Eco Friendly', 'Organic Garden', 'Net Zero'], img: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800' },
+    { title: 'Sell: Smart Home 4BHK', desc: 'Fully automated smart home with Alexa integration, automated lighting, and advanced security. Seller upgrading.', beds: 4, baths: 4, size: 3100, price: 14800000, amenities: ['Smart Home', 'Alexa', 'Automated', 'Advanced Security'], img: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=800' },
+    { title: 'Sell: Lakeside Retreat', desc: 'Peaceful lakeside property with boat jetty, nature views, and expansive outdoor spaces. Second home selling.', beds: 4, baths: 3, size: 3400, price: 16500000, amenities: ['Lakeside', 'Boat Jetty', 'Nature Views', 'Peaceful'], img: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800' },
+    { title: 'Sell: City Centre 2BHK', desc: 'Prime city centre location with walk to metro, restaurants, and offices. High appreciation potential.', beds: 2, baths: 2, size: 1050, price: 6200000, amenities: ['City Centre', 'Metro Walk', 'High Appreciation'], img: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800' },
+    { title: 'Sell: Riverside Mansion', desc: 'Grand riverside estate with private dock, sprawling gardens, and multiple guest suites. Once in a lifetime opportunity.', beds: 6, baths: 5, size: 5800, price: 32000000, amenities: ['Riverside', 'Private Dock', 'Guest Suites', 'Estate'], img: 'https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=800' },
+    { title: 'Sell: Minimalist 1BHK', desc: 'Clean minimalist design, energy-efficient fixtures, and smart layout. Perfect for single professionals.', beds: 1, baths: 1, size: 720, price: 3500000, amenities: ['Minimalist', 'Energy Efficient', 'Smart Layout'], img: 'https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?w=800' },
+    { title: 'Sell: Farmhouse 5BHK', desc: 'Stunning farmhouse on 1-acre plot with infinity pool, entertainment barn, and organic farm. Country living at its finest.', beds: 5, baths: 4, size: 6000, price: 28000000, amenities: ['1 Acre Plot', 'Infinity Pool', 'Organic Farm', 'Entertainment Barn'], img: 'https://images.unsplash.com/photo-1600566752734-cd29f7c1f86a?w=800' },
+    { title: 'Sell: Modern Row House', desc: 'Contemporary row house with private garden, attached parking, and community clubhouse. Perfect family home.', beds: 3, baths: 3, size: 2200, price: 10500000, amenities: ['Row House', 'Private Garden', 'Clubhouse', 'Parking'], img: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800' },
+    { title: 'Sell: High Floor 3BHK', desc: 'High-floor apartment with unobstructed views, premium tower with hotel-like amenities and concierge.', beds: 3, baths: 3, size: 1950, price: 12200000, amenities: ['High Floor', 'Hotel Amenities', 'Concierge', 'Unobstructed Views'], img: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800' },
+    { title: 'Sell: Artist Loft 2BHK', desc: 'Creative loft space with artist studio, gallery walls, and natural light from skylights. One-of-a-kind property.', beds: 2, baths: 2, size: 1700, price: 7100000, amenities: ['Loft Style', 'Artist Studio', 'Skylights', 'Creative'], img: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800' },
+    { title: 'Sell: Corner Penthouse', desc: 'Corner penthouse with wraparound terrace, outdoor jacuzzi, and breathtaking 270-degree views. Selling furnished.', beds: 4, baths: 4, size: 4100, price: 26000000, amenities: ['Corner Penthouse', 'Wraparound Terrace', 'Jacuzzi', 'Furnished'], img: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?w=800' }
+  ];
+
+  sellHomes.forEach((home, index) => {
+    properties.push({
+      id: String(idCounter++),
+      ownerId: `owner${Math.floor(Math.random() * 10) + 1}`,
+      ownerName: ownerNames[Math.floor(Math.random() * ownerNames.length)],
+      ownerMobile: `+91${9000000000 + Math.floor(Math.random() * 100000000)}`,
+      category: 'home-sell',
+      title: home.title,
+      description: home.desc,
+      price: home.price,
+      location: locations[Math.floor(Math.random() * locations.length)],
+      address: `${400 + index} ${locations[Math.floor(Math.random() * locations.length)]} Road`,
+      coordinates: generateRandomCoordinates(index + 80),
+      size: home.size,
+      sizeUnit: 'sqft',
+      bedrooms: home.beds,
+      bathrooms: home.baths,
+      images: [home.img, 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&auto=format&fit=crop', 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&auto=format&fit=crop'],
+      amenities: home.amenities,
+      status: 'active',
+      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
   // 10 Land Properties
   const landProperties = [
     { title: 'Prime Commercial Plot', desc: 'Premium commercial plot in high-traffic business district with excellent road connectivity. Perfect for retail, office complex, or mixed-use development. Clear title and ready for construction.', size: 5000, price: 15000000, amenities: ['Commercial Zone', 'High Traffic', 'Road Connectivity', 'Clear Title'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
@@ -356,13 +415,50 @@ function generateSampleProperties(): Property[] {
       ownerId: `owner${Math.floor(Math.random() * 10) + 1}`,
       ownerName: ownerNames[Math.floor(Math.random() * ownerNames.length)],
       ownerMobile: `+91${9000000000 + Math.floor(Math.random() * 100000000)}`,
-      category: 'land-buy',
+      category: 'land-buy' as PropertyCategory,
       title: land.title,
       description: land.desc,
       price: land.price,
       location: locations[Math.floor(Math.random() * locations.length)],
       address: `Plot ${300 + index}, ${locations[Math.floor(Math.random() * locations.length)]} District`,
       coordinates: generateRandomCoordinates(index + 70),
+      size: land.size,
+      sizeUnit: 'sqft',
+      images: [land.img, 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop'],
+      amenities: land.amenities,
+      status: 'active',
+      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  // 10 Land for Sell
+  const landSellProperties = [
+    { title: 'Sell: Prime Corner Plot', desc: 'Excellent corner plot in prime residential area. Owner selling urgently due to relocation. Clear title, immediate registration possible.', size: 3200, price: 7200000, amenities: ['Corner Plot', 'Clear Title', 'Urgent Sale', 'Residential'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Commercial Hub Plot', desc: 'Strategically located commercial plot on main road with high footfall. Ideal for showroom, office, or retail complex.', size: 6000, price: 16500000, amenities: ['Main Road', 'High Footfall', 'Commercial', 'Road Facing'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Farm Land with Water', desc: 'Productive farmland with borewell, electricity connection, and existing crops. Great for agriculture or agritourism.', size: 30000, price: 9500000, amenities: ['Borewell', 'Electricity', 'Existing Crops', 'Agriculture'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Hilltop Scenic Land', desc: 'Breathtaking hilltop land with 360-degree views. Perfect for luxury villa, boutique resort, or meditation center.', size: 12000, price: 11000000, amenities: ['Hilltop', '360 Views', 'Scenic', 'Development Potential'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Industrial Plot Ready', desc: 'Ready-to-develop industrial plot with power supply, drainage, and road access. Approved for light and heavy industry.', size: 9000, price: 20000000, amenities: ['Industrial Approved', 'Power Supply', 'Drainage', 'Road Access'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Beachside Land Rare', desc: 'Rare beachside land plot with ocean frontage. Tourism zone approved for resort or beach club development.', size: 8000, price: 40000000, amenities: ['Beachside', 'Ocean Frontage', 'Tourism Zone', 'Rare Opportunity'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Society Plot Premium', desc: 'Premium plot inside premium gated society with all utilities laid. Build your custom villa in secure surroundings.', size: 4000, price: 8800000, amenities: ['Gated Society', 'Utilities Ready', 'Secure', 'Custom Build'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Mixed Use Land', desc: 'Mixed-use zoned land suitable for residential-commercial development. Ground floor retail with upper residential floors.', size: 5500, price: 14000000, amenities: ['Mixed Use', 'Commercial Ground', 'Residential Upper', 'Flexible'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Eco Reserve Land', desc: 'Land parcel adjacent to protected forest reserve. Eco-tourism and nature retreat development opportunity.', size: 20000, price: 17000000, amenities: ['Forest Adjacent', 'Eco Tourism', 'Nature Reserve', 'Peaceful'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+    { title: 'Sell: Riverside Flat Land', desc: 'Flat riverfront land with road on two sides. Approved for housing development or commercial complex.', size: 14000, price: 22000000, amenities: ['Riverfront', 'Flat Land', 'Two Road Access', 'Development Approved'], img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' }
+  ];
+
+  landSellProperties.forEach((land, index) => {
+    properties.push({
+      id: String(idCounter++),
+      ownerId: `owner${Math.floor(Math.random() * 10) + 1}`,
+      ownerName: ownerNames[Math.floor(Math.random() * ownerNames.length)],
+      ownerMobile: `+91${9000000000 + Math.floor(Math.random() * 100000000)}`,
+      category: 'land-sell' as PropertyCategory,
+      title: land.title,
+      description: land.desc,
+      price: land.price,
+      location: locations[Math.floor(Math.random() * locations.length)],
+      address: `Survey No. ${500 + index}, ${locations[Math.floor(Math.random() * locations.length)]} Taluk`,
+      coordinates: generateRandomCoordinates(index + 90),
       size: land.size,
       sizeUnit: 'sqft',
       images: [land.img, 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop'],

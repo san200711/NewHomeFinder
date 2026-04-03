@@ -31,6 +31,17 @@ function OTPInput({ value, onChange }: { value: string; onChange: (v: string) =>
 
   return (
     <View style={otpStyles.wrapper}>
+      <TextInput
+        style={otpStyles.hidden}
+        value={value}
+        onChangeText={(t) => onChange(t.replace(/\D/g, '').slice(0, 6))}
+        keyboardType="number-pad"
+        maxLength={6}
+        autoFocus
+        caretHidden
+        contextMenuHidden
+        blurOnSubmit={false}
+      />
       <View style={otpStyles.row} pointerEvents="none">
         {digits.map((_, i) => (
           <View
@@ -41,17 +52,6 @@ function OTPInput({ value, onChange }: { value: string; onChange: (v: string) =>
           </View>
         ))}
       </View>
-      {/* Hidden real input sits on top */}
-      <TextInput
-        style={otpStyles.hidden}
-        value={value}
-        onChangeText={(t) => onChange(t.replace(/\D/g, '').slice(0, 6))}
-        keyboardType="number-pad"
-        maxLength={6}
-        autoFocus
-        caretHidden
-        contextMenuHidden
-      />
     </View>
   );
 }

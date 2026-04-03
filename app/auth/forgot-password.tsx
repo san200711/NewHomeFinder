@@ -24,13 +24,6 @@ import { useAlert } from '@/template';
 function OTPInput({ value, onChange, accentColor }: { value: string; onChange: (v: string) => void; accentColor: string }) {
   return (
     <View style={otpStyles.wrapper}>
-      <View style={otpStyles.row} pointerEvents="none">
-        {Array(6).fill('').map((_, i) => (
-          <View key={i} style={[otpStyles.box, value[i] ? { ...otpStyles.boxFilled, borderColor: accentColor } : otpStyles.boxEmpty]}>
-            <Text style={otpStyles.digit}>{value[i] || ''}</Text>
-          </View>
-        ))}
-      </View>
       <TextInput
         style={otpStyles.hidden}
         value={value}
@@ -40,7 +33,15 @@ function OTPInput({ value, onChange, accentColor }: { value: string; onChange: (
         autoFocus
         caretHidden
         contextMenuHidden
+        blurOnSubmit={false}
       />
+      <View style={otpStyles.row} pointerEvents="none">
+        {Array(6).fill('').map((_, i) => (
+          <View key={i} style={[otpStyles.box, value[i] ? { ...otpStyles.boxFilled, borderColor: accentColor } : otpStyles.boxEmpty]}>
+            <Text style={otpStyles.digit}>{value[i] || ''}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
