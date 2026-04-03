@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
+import { getStoredApiKey, saveApiKey, clearApiKey, isRealEmailConfigured } from '@/services/email';
+import { EmailConfig } from '@/config/email.config';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -19,6 +21,52 @@ export default function SettingsScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+
+  // Developer: Resend API key
+  const [showDevSection, setShowDevSection] = useState(false);
+  const [resendApiKey, setResendApiKey] = useState('');
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [savingKey, setSavingKey] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+
+  useEffect(() => {
+    getStoredApiKey().then((k) => setResendApiKey(k));
+    isRealEmailConfigured().then((v) => setEmailConfigured(v));
+  }, []);
+
+  const handleSaveApiKey = async () => {
+    if (!resendApiKey.trim()) {
+      showAlert('Empty Key', 'Please enter your Resend API key.');
+      return;
+    }
+    setSavingKey(true);
+    try {
+      await saveApiKey(resendApiKey.trim());
+      const configured = await isRealEmailConfigured();
+      setEmailConfigured(configured);
+      showAlert('Saved', 'Resend API key saved. Real email OTP is now active.');
+    } catch {
+      showAlert('Error', 'Failed to save key.');
+    } finally {
+      setSavingKey(false);
+    }
+  };
+
+  const handleClearApiKey = async () => {
+    showAlert('Clear API Key', 'This will revert to mock OTP (123456). Continue?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: async () => {
+          await clearApiKey();
+          setResendApiKey('');
+          setEmailConfigured(false);
+          showAlert('Cleared', 'API key removed. App will use mock OTP.');
+        },
+      },
+    ]);
+  };
 
   if (!user) {
     router.replace('/');
@@ -257,6 +305,113 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
+        {/* Developer Settings */}
+        <View style={styles.section}>
+          <Pressable
+            onPress={() => setShowDevSection((v) => !v)}
+            style={styles.devToggle}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="code" size={24} color="#7C3AED" />
+              <View>
+                <Text style={styles.settingText}>Developer Settings</Text>
+                <Text style={styles.devSubtitle}>Configure Resend email API</Text>
+              </View>
+            </View>
+            <View style={styles.devStatusRow}>
+              <View style={[styles.statusDot, { backgroundColor: emailConfigured ? '#10B981' : '#F59E0B' }]} />
+              <MaterialIcons
+                name={showDevSection ? 'expand-less' : 'expand-more'}
+                size={24}
+                color={theme.colors.textLight}
+              />
+            </View>
+          </Pressable>
+
+          {showDevSection && (
+            <View style={styles.devCard}>
+              {/* Status banner */}
+              <View style={[styles.statusBanner, { backgroundColor: emailConfigured ? '#ECFDF5' : '#FFFBEB' }]}>
+                <MaterialIcons
+                  name={emailConfigured ? 'check-circle' : 'warning'}
+                  size={18}
+                  color={emailConfigured ? '#10B981' : '#F59E0B'}
+                />
+                <Text style={[styles.statusText, { color: emailConfigured ? '#065F46' : '#92400E' }]}>
+                  {emailConfigured
+                    ? 'Real email OTP is active'
+                    : EmailConfig.USE_MOCK_EMAIL
+                    ? 'Mock mode enabled in config'
+                    : 'No API key — using fallback OTP: 123456'}
+                </Text>
+              </View>
+
+              <Text style={styles.devLabel}>Resend API Key</Text>
+              <Text style={styles.devHint}>
+                Get a free key at{' '}
+                <Text style={styles.devLink}>resend.com/api-keys</Text>
+              </Text>
+
+              <View style={styles.apiKeyRow}>
+                <TextInput
+                  style={styles.apiKeyInput}
+                  value={resendApiKey}
+                  onChangeText={setResendApiKey}
+                  placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                  placeholderTextColor="#CBD5E1"
+                  secureTextEntry={!showApiKey}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={Keyboard.dismiss}
+                />
+                <Pressable
+                  onPress={() => setShowApiKey((v) => !v)}
+                  style={styles.eyeBtn}
+                  hitSlop={8}
+                >
+                  <MaterialIcons
+                    name={showApiKey ? 'visibility' : 'visibility-off'}
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                </Pressable>
+              </View>
+
+              <View style={styles.devActions}>
+                <Pressable
+                  onPress={handleSaveApiKey}
+                  disabled={savingKey}
+                  style={({ pressed }) => [
+                    styles.saveKeyBtn,
+                    { opacity: pressed || savingKey ? 0.75 : 1 },
+                  ]}
+                >
+                  <MaterialIcons name="save" size={18} color="#fff" />
+                  <Text style={styles.saveKeyBtnText}>
+                    {savingKey ? 'Saving...' : 'Save Key'}
+                  </Text>
+                </Pressable>
+
+                {emailConfigured && (
+                  <Pressable
+                    onPress={handleClearApiKey}
+                    style={styles.clearKeyBtn}
+                  >
+                    <MaterialIcons name="delete-outline" size={18} color={theme.colors.error} />
+                    <Text style={styles.clearKeyBtnText}>Clear</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <Text style={styles.devFootnote}>
+                Sender: <Text style={{ fontWeight: '600' }}>onboarding@resend.dev</Text>
+                {' '}(works without domain setup)
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* App Version */}
         <Text style={styles.versionText}>New Home Finder v1.0.0</Text>
           </ScrollView>
@@ -433,5 +588,126 @@ const styles = StyleSheet.create({
     color: theme.colors.textLight,
     textAlign: 'center',
     marginTop: theme.spacing.xl,
+  },
+
+  // ── Developer section
+  devToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
+  },
+  devSubtitle: {
+    fontSize: 11,
+    color: '#7C3AED',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  devStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  devCard: {
+    backgroundColor: '#FAFAFA',
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
+    gap: 10,
+  },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderRadius: 10,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  devLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.text,
+  },
+  devHint: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  devLink: {
+    color: '#7C3AED',
+    fontWeight: '600',
+  },
+  apiKeyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#DDD6FE',
+    paddingHorizontal: 12,
+    height: 50,
+  },
+  apiKeyInput: {
+    flex: 1,
+    fontSize: 14,
+    color: theme.colors.text,
+    fontFamily: 'monospace' as any,
+  },
+  eyeBtn: {
+    padding: 4,
+  },
+  devActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  saveKeyBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#7C3AED',
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  saveKeyBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  clearKeyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: theme.colors.error,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  clearKeyBtnText: {
+    color: theme.colors.error,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  devFootnote: {
+    fontSize: 11,
+    color: theme.colors.textSecondary,
+    lineHeight: 16,
   },
 });
